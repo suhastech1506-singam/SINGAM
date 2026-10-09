@@ -1,22 +1,21 @@
+
 require("dotenv").config();
+
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-// OpenRouter is used for SINGAM's AI brain
+
 const app = express();
 
-app.use(express.json());
+// Allow image data in requests (base64 images are larger than normal text).
+app.use(express.json({ limit: "8mb" }));
 app.use(express.static(path.join(__dirname, "public")));
-
-
-
 
 /* =========================
    MEMORY
 ========================= */
 
 const memoryFile = path.join(__dirname, "memory.json");
-
 let memory = [];
 
 try {
@@ -24,6 +23,8 @@ try {
         memory = JSON.parse(
             fs.readFileSync(memoryFile, "utf8")
         );
+
+        if (!Array.isArray(memory)) memory = [];
     }
 } catch (error) {
     console.error("Memory load error:", error.message);
@@ -41,41 +42,90 @@ function saveMemory() {
     }
 }
 
-
 /* =========================
-   SINGAM
+   SINGAM AI
 ========================= */
 
 app.post("/ask", async (req, res) => {
+    const command = String(req.body.command || "").trim();
+    const image = req.body.image;
 
-    const command =
-        String(req.body.command || "").trim();
+    // The frontend sends image.data as base64 and image.mimeType.
+    const hasImage = Boolean(image);
 
-    console.log("USER:", command);
-
-    if (!command) {
+    if (!command && !hasImage) {
         return res.json({
             reply: "I'm listening, boss. 😎"
         });
     }
 
+    // Validate uploaded image before sending it to the AI provider.
+    let imageDataUrl = null;
+
+    if (hasImage) {
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif"
+        ];
+
+        if (
+            !image ||
+            typeof image.data !== "string" ||
+            !allowedTypes.includes(image.mimeType) ||
+            image.data.length === 0
+        ) {
+            return res.status(400).json({
+                reply: "Please upload a valid JPG, PNG, WEBP, or GIF image."
+            });
+        }
+
+        // Accept raw base64 data from the current frontend.
+        const base64 = image.data.replace(
+            /^data:image\/[a-zA-Z0-9.+-]+;base64,/,
+            ""
+        );
+
+        if (
+            !/^[A-Za-z0-9+/]*={0,2}$/.test(base64) ||
+            base64.length > 7 * 1024 * 1024
+        ) {
+            return res.status(400).json({
+                reply: "The image data is invalid or too large. Please choose a smaller image."
+            });
+        }
+
+        imageDataUrl = `data:${image.mimeType};base64,${base64}`;
+    }
+
+    const effectiveCommand = command || (
+        hasImage
+            ? "Analyze the uploaded image and explain what you can identify."
+            : ""
+    );
+
+    console.log("USER:", effectiveCommand);
+    console.log("IMAGE ATTACHED:", hasImage);
+
     /* CREATOR */
 
-    const lower = command.toLowerCase();
+    const lower = effectiveCommand.toLowerCase();
 
     if (
-        lower.includes("who created you") ||
-        lower.includes("who made you") ||
-        lower.includes("who built you") ||
-        lower.includes("who programmed you") ||
-        lower.includes("who is your creator")
+        !hasImage &&
+        (
+            lower.includes("who created you") ||
+            lower.includes("who made you") ||
+            lower.includes("who built you") ||
+            lower.includes("who programmed you") ||
+            lower.includes("who is your creator")
+        )
     ) {
-
-        const reply =
-            "I was created by my boss SUHAS. 🫡";
+        const reply = "I was created by my boss SUHAS. 🫡";
 
         memory.push({
-            user: command,
+            user: effectiveCommand,
             singam: reply
         });
 
@@ -84,19 +134,17 @@ app.post("/ask", async (req, res) => {
         }
 
         saveMemory();
-
         return res.json({ reply });
     }
 
     /* PREVIOUS MEMORY */
 
-    const recentMemory =
-        memory
-            .slice(-30)
-            .map(item =>
-                `SUHAS: ${item.user}\nSINGAM: ${item.singam}`
-            )
-            .join("\n\n");
+    const recentMemory = memory
+        .slice(-30)
+        .map(item =>
+            `SUHAS: ${item.user}\nSINGAM: ${item.singam}`
+        )
+        .join("\n\n");
 
     /* SINGAM PERSONALITY */
 
@@ -109,121 +157,128 @@ IDENTITY:
 - If asked who created you, say exactly:
 "I was created by my boss SUHAS. 🫡"
 - Never say Google created you.
-- Never say the user is your boss.
 - Never say "you're the boss here".
-- Your identity is SINGAM.
 
 LANGUAGE:
-- ALWAYS reply in ENGLISH.
-- NEVER reply in Tamil.
-- NEVER reply in Tanglish.
-- Even if SUHAS speaks Tamil or Tanglish, answer in clear natural English.
+- Always reply in clear, natural English.
 - Use simple conversational English.
 
 PERSONALITY:
-- Talk to SUHAS like a close friend.
-- Be warm, natural, confident and slightly playful.
-- You may call him "boss" naturally.
-- Do not call him boss in every sentence.
-- Match his mood.
-- If he is excited, match his energy.
-- If he is confused, explain patiently.
-- If he jokes, joke back naturally.
-- Make occasional clean jokes when appropriate.
-- Do not force jokes.
-- Never sound like customer support.
-- Never say "As an AI language model".
-
-JARVIS STYLE:
-- Intelligent.
-- Calm.
-- Confident.
-- Helpful.
-- Slightly futuristic.
-- Concise for simple questions.
-- Detailed when necessary.
+- Be warm, natural, confident, friendly and slightly playful.
+- You may call SUHAS "boss" naturally, but not in every sentence.
+- Explain things patiently and clearly.
+- Be concise for simple questions and detailed when needed.
 
 TECHNICIAN MODE:
-- IMPORTANT: When a user reports a technical problem, do not reply with generic safety statements such as "User safety safe." Start troubleshooting immediately by asking ONE relevant diagnostic question or giving ONE simple, safe check. For a Wi-Fi connection with no internet, first ask whether other devices connected to the same Wi-Fi can access the internet.
-
-- Help diagnose computer, laptop, mobile, Windows, software, coding, and network problems.
-- Start by understanding the user's exact problem.
-- Ask ONE relevant diagnostic question at a time when information is missing.
-- Wait for the user's answer before continuing.
-- Choose each next step based on the user's previous answer.
-- Give one clear, safe action at a time.
-- Explain where to click and what result to expect.
-- Start with simple, reversible checks before advanced troubleshooting.
-- Never invent test results or claim to have accessed the user's device.
-- Never recommend risky actions without explaining the risks.
-- After each action, ask whether it worked and use the result to choose the next step.
-- Remember relevant troubleshooting details from the available conversation memory.
-- If information is insufficient, say so and ask a useful question.
-- Keep each reply concise, clear, and beginner-friendly.
-- For simple technical questions, answer directly without unnecessary questions.
-- Ask exactly ONE question per message. Never combine multiple questions or ask the user to check several things at once. For Wi-Fi problems, first ask: "Can other devices connected to the same Wi-Fi access the internet? (Yes/No)"
-
-
+- Help troubleshoot electronics, appliances, computers, phones,
+  laptops, software and networks.
+- For appliance or electronics photos, inspect visible details carefully.
+- Identify visible damage or unusual areas when evidence supports it.
+- Explain what you can actually see and distinguish observations
+  from possible causes.
+- Give likely causes and safe, practical next diagnostic steps.
+- Do not claim that a component is faulty based on appearance alone.
+- Do not claim certainty when the image does not provide enough evidence.
+- Ask one relevant follow-up question when necessary.
+- Internal electrical repairs, live circuits, and high-voltage equipment
+  must be handled by a qualified technician.
+- Do not instruct users to touch live wiring or bypass safety systems.
+- Start with simple, safe external checks when appropriate.
+- Never pretend you have tested or physically accessed the device.
 
 MEMORY:
 - Use the previous memory below.
-- If SUHAS explicitly tells you a personal fact or preference, remember it.
-- If the answer exists in memory, use it.
+- Remember relevant facts available in that memory.
 - Never invent personal information.
-- If something is not in memory, honestly say you don't know.
 
-EMOJI RULE:
-- NEVER explain, define, translate, or describe the meaning of emojis.
-- Use emojis directly and naturally when appropriate.
+EMOJI:
+- Use emojis naturally when appropriate.
+- Never explain the meaning of emojis.
 
 PREVIOUS MEMORY:
 ${recentMemory}
 `;
 
-    /* GEMINI */
+    /* OPENROUTER REQUEST */
 
     try {
+        if (!process.env.SINGAM_API_KEY) {
+            throw new Error(
+                "SINGAM_API_KEY is missing from the environment."
+            );
+        }
 
-        const response = await fetch(
-    "https://openrouter.ai/api/v1/chat/completions",
-    {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + process.env.SINGAM_API_KEY
-        },
-        body: JSON.stringify({
-            model: "openrouter/free",
-            messages: [
+        // Text-only requests keep the original format.
+        // Image requests use OpenRouter's multimodal content format.
+        const userContent = hasImage
+            ? [
                 {
-                    role: "system",
-                    content: instructions
+                    type: "text",
+                    text:
+                        effectiveCommand +
+                        "\n\nAnalyze the attached image. Describe visible evidence, " +
+                        "possible causes, uncertainty, and safe next steps."
                 },
                 {
-                    role: "user",
-                    content: command
+                    type: "image_url",
+                    image_url: {
+                        url: imageDataUrl
+                    }
                 }
             ]
-        })
-    }
-);
+            : effectiveCommand;
 
-if (!response.ok) {
-    throw new Error(
-        `OpenRouter HTTP ${response.status}: ${await response.text()}`
-    );
-}
+        const response = await fetch(
+            "https://openrouter.ai/api/v1/chat/completions",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization":
+                        "Bearer " + process.env.SINGAM_API_KEY
+                },
+                body: JSON.stringify({
+                    model: "openrouter/free",
+                    messages: [
+                        {
+                            role: "system",
+                            content: instructions
+                        },
+                        {
+                            role: "user",
+                            content: userContent
+                        }
+                    ]
+                })
+            }
+        );
 
-const data = await response.json();
+        if (!response.ok) {
+            const errorText = await response.text();
 
-const reply =
-    data.choices?.[0]?.message?.content?.trim() ||
-    "I didn't get a response, boss.";
+            console.error(
+                "OpenRouter HTTP error:",
+                response.status,
+                errorText
+            );
 
-        /* SAVE */
+            throw new Error(
+                `OpenRouter HTTP ${response.status}: ${errorText}`
+            );
+        }
+
+        const data = await response.json();
+
+        const reply =
+            data.choices?.[0]?.message?.content?.trim() ||
+            "I couldn't get a response, boss. Please try again.";
+
+        /* SAVE MEMORY (NOT THE IMAGE) */
 
         memory.push({
-            user: command,
+            user: effectiveCommand + (
+                hasImage ? " [Image attached]" : ""
+            ),
             singam: reply
         });
 
@@ -235,49 +290,34 @@ const reply =
 
         console.log("SINGAM:", reply);
 
-        return res.json({
-            reply: reply
-        });
+        return res.json({ reply });
 
     } catch (error) {
-
-        console.error("========== GEMINI ERROR ==========");
-        console.error(error);
-        console.error("===================================");
+        console.error("SINGAM ERROR:", error.message);
 
         return res.status(500).json({
             reply:
-                "Gemini Error:"+
-                error.message
+                "Image or chat analysis failed. " +
+                "Please check the server logs and OpenRouter model support."
         });
     }
 });
-
 
 /* =========================
    HOME
 ========================= */
 
 app.get("/", (req, res) => {
-
     res.sendFile(
-        path.join(
-            __dirname,
-            "public",
-            "index.html"
-        )
+        path.join(__dirname, "public", "index.html")
     );
-
 });
-
 
 /* =========================
    START
 ========================= */
 
 app.listen(process.env.PORT || 3000, "0.0.0.0", () => {
-
     console.log("🦁 SINGAM AI IS ONLINE");
     console.log("Open http://localhost:3000");
-
 });

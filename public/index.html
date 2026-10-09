@@ -3,853 +3,283 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SINGAM — Technician AI</title>
-
+<title>SINGAM | Technician AI</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
-
-*{
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-}
-
-:root{
-    --bg:#07090c;
-    --panel:#0b0f13;
-    --panel2:#0e1318;
-    --border:rgba(255,255,255,.075);
-    --text:#f2f6f7;
-    --muted:#68757d;
-    --cyan:#58e7f5;
-    --green:#55e89a;
-}
-
-body{
-    min-height:100vh;
-    background:
-        radial-gradient(circle at 65% -15%,rgba(55,220,240,.10),transparent 35%),
-        radial-gradient(circle at 0% 100%,rgba(20,110,130,.07),transparent 30%),
-        var(--bg);
-    color:var(--text);
-    font-family:Inter,Arial,sans-serif;
-    overflow:hidden;
-}
-
-/* subtle professional grid */
-
-body:before{
-    content:"";
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-    opacity:.10;
-    background-image:
-        linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
-    background-size:50px 50px;
-}
-
-/* APP */
-
-.app{
-    width:96vw;
-    height:94vh;
-    margin:3vh auto;
-    display:grid;
-    grid-template-columns:235px 1fr;
-    gap:12px;
-}
-
-/* SIDEBAR */
-
-.sidebar{
-    background:rgba(10,13,17,.88);
-    border:1px solid var(--border);
-    border-radius:20px;
-    padding:20px 14px;
-    display:flex;
-    flex-direction:column;
-    backdrop-filter:blur(20px);
-}
-
-.logo{
-    display:flex;
-    align-items:center;
-    gap:11px;
-    padding:6px 8px 28px;
-}
-
-.logo-box{
-    width:39px;
-    height:39px;
-    border:1px solid rgba(88,231,245,.45);
-    border-radius:11px;
-    display:grid;
-    place-items:center;
-    color:var(--cyan);
-    font-family:"Space Grotesk";
-    font-weight:700;
-    box-shadow:0 0 20px rgba(88,231,245,.08);
-}
-
-.logo h1{
-    font-family:"Space Grotesk";
-    font-size:18px;
-    letter-spacing:3px;
-}
-
-.logo small{
-    display:block;
-    margin-top:3px;
-    color:#5d6970;
-    font-size:8px;
-    letter-spacing:2px;
-}
-
-.section-title{
-    padding:0 10px 9px;
-    color:#414b51;
-    font-size:8px;
-    font-weight:600;
-    letter-spacing:1.8px;
-}
-
-.nav{
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-}
-
-.nav button{
-    width:100%;
-    border:1px solid transparent;
-    background:transparent;
-    color:#7b878e;
-    text-align:left;
-    padding:11px 12px;
-    border-radius:10px;
-    font-size:11px;
-    cursor:pointer;
-}
-
-.nav button:hover,
-.nav .active{
-    color:var(--cyan);
-    background:rgba(88,231,245,.045);
-    border-color:rgba(88,231,245,.10);
-}
-
-.system{
-    margin-top:auto;
-    padding:14px;
-    border:1px solid var(--border);
-    border-radius:13px;
-    background:rgba(255,255,255,.018);
-}
-
-.system-title{
-    color:#48545b;
-    font-size:8px;
-    letter-spacing:1.5px;
-    margin-bottom:12px;
-}
-
-.stat{
-    display:flex;
-    justify-content:space-between;
-    margin-top:9px;
-    font-size:10px;
-    color:#69767d;
-}
-
-.good{
-    color:var(--green);
-}
-
-.dot{
-    display:inline-block;
-    width:6px;
-    height:6px;
-    margin-right:5px;
-    border-radius:50%;
-    background:var(--green);
-    box-shadow:0 0 9px var(--green);
-}
-
-/* MAIN */
-
-.main{
-    min-width:0;
-    display:flex;
-    flex-direction:column;
-    background:rgba(8,11,15,.84);
-    border:1px solid var(--border);
-    border-radius:20px;
-    overflow:hidden;
-    backdrop-filter:blur(20px);
-}
-
-/* HEADER */
-
-.header{
-    height:70px;
-    padding:0 25px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    border-bottom:1px solid var(--border);
-}
-
-.header-title{
-    font-family:"Space Grotesk";
-    font-size:14px;
-    font-weight:600;
-}
-
-.header-sub{
-    margin-top:4px;
-    color:#56636b;
-    font-size:9px;
-}
-
-.online{
-    display:flex;
-    align-items:center;
-    color:#829097;
-    font-size:9px;
-    letter-spacing:1.4px;
-}
-
-/* CONTENT */
-
-.content{
-    flex:1;
-    overflow-y:auto;
-    padding:28px 7%;
-}
-
-.content::-webkit-scrollbar{
-    width:4px;
-}
-
-.content::-webkit-scrollbar-thumb{
-    background:#26343a;
-}
-
-/* DASHBOARD */
-
-.dashboard{
-    height:100%;
-    min-height:450px;
-    display:grid;
-    grid-template-columns:1fr 310px;
-    align-items:center;
-    gap:70px;
-}
-
-.intro{
-    padding-left:5%;
-}
-
-.eyebrow{
-    color:var(--cyan);
-    font-size:9px;
-    letter-spacing:3px;
-    margin-bottom:17px;
-}
-
-.intro h2{
-    font-family:"Space Grotesk";
-    font-size:52px;
-    letter-spacing:8px;
-    line-height:1;
-}
-
-.intro h2 span{
-    color:var(--cyan);
-}
-
-.intro p{
-    max-width:470px;
-    color:#65727a;
-    font-size:12px;
-    line-height:1.8;
-    margin-top:18px;
-}
-
-.divider{
-    width:90px;
-    height:1px;
-    background:var(--cyan);
-    opacity:.5;
-    margin-top:25px;
-}
-
-/* CORE */
-
-.core-panel{
-    border:1px solid var(--border);
-    border-radius:18px;
-    padding:25px;
-    background:rgba(255,255,255,.018);
-}
-
-.core-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:25px;
-}
-
-.core-head span:first-child{
-    font-size:9px;
-    letter-spacing:1.8px;
-    color:#68757c;
-}
-
-.ready{
-    color:var(--green);
-    font-size:9px;
-}
-
-.core{
-    height:190px;
-    display:grid;
-    place-items:center;
-    position:relative;
-}
-
-.core-ring{
-    position:absolute;
-    width:145px;
-    height:145px;
-    border-radius:50%;
-    border:1px solid rgba(88,231,245,.22);
-}
-
-.core-ring:nth-child(2){
-    width:115px;
-    height:115px;
-    border-color:rgba(88,231,245,.42);
-    border-top-color:transparent;
-    animation:rotate 7s linear infinite;
-}
-
-.core-ring:nth-child(3){
-    width:85px;
-    height:85px;
-    border-color:rgba(88,231,245,.55);
-    border-bottom-color:transparent;
-    animation:rotate 4s linear infinite reverse;
-}
-
-.core-light{
-    width:48px;
-    height:48px;
-    border-radius:50%;
-    background:radial-gradient(circle,#eaffff 0%,#6deaf5 20%,#087d91 50%,#061217 75%);
-    box-shadow:
-        0 0 20px rgba(88,231,245,.7),
-        0 0 55px rgba(88,231,245,.18);
-    animation:breathe 2.5s ease-in-out infinite;
-}
-
-@keyframes rotate{
-    to{transform:rotate(360deg)}
-}
-
-@keyframes breathe{
-    50%{transform:scale(1.12)}
-}
-
-.core-footer{
-    border-top:1px solid var(--border);
-    padding-top:15px;
-    display:flex;
-    justify-content:space-between;
-    color:#59666d;
-    font-size:9px;
-}
-
-.core-footer b{
-    color:#a4b1b6;
-}
-
-/* MESSAGES */
-
-.message-row{
-    display:flex;
-    margin-bottom:18px;
-}
-
-.message-row.user{
-    justify-content:flex-end;
-}
-
-.message{
-    max-width:75%;
-    padding:13px 16px;
-    border-radius:14px;
-    font-size:12px;
-    line-height:1.7;
-    white-space:pre-wrap;
-}
-
-.message.ai{
-    border:1px solid rgba(88,231,245,.10);
-    border-left:2px solid rgba(88,231,245,.6);
-    background:rgba(88,231,245,.025);
-}
-
-.message.user{
-    border:1px solid rgba(255,255,255,.07);
-    background:rgba(255,255,255,.045);
-}
-
-/* COMPOSER */
-
-.composer{
-    padding:16px 25px 19px;
-    border-top:1px solid var(--border);
-    background:rgba(5,8,11,.7);
-}
-
-.input{
-    max-width:900px;
-    margin:auto;
-    height:55px;
-    display:flex;
-    align-items:center;
-    padding:5px;
-    border:1px solid rgba(255,255,255,.09);
-    border-radius:14px;
-    background:#090d11;
-}
-
-.input:focus-within{
-    border-color:rgba(88,231,245,.32);
-    box-shadow:0 0 22px rgba(88,231,245,.05);
-}
-
-#command{
-    flex:1;
-    height:100%;
-    border:0;
-    outline:0;
-    background:transparent;
-    color:white;
-    padding:0 14px;
-    font-size:12px;
-}
-
-#command::placeholder{
-    color:#4e5b62;
-}
-
-.send{
-    height:43px;
-    width:82px;
-    border:0;
-    border-radius:10px;
-    background:#dffbff;
-    color:#071216;
-    font-size:10px;
-    font-weight:700;
-    cursor:pointer;
-}
-
-.send:hover{
-    background:var(--cyan);
-}
-
-.quick{
-    max-width:900px;
-    margin:9px auto 0;
-    display:flex;
-    justify-content:center;
-    gap:6px;
-}
-
-.quick button{
-    border:1px solid rgba(255,255,255,.06);
-    background:transparent;
-    color:#58666d;
-    padding:6px 10px;
-    border-radius:20px;
-    font-size:9px;
-    cursor:pointer;
-}
-
-.quick button:hover{
-    color:var(--cyan);
-    border-color:rgba(88,231,245,.2);
-}
-
-/* MOBILE */
-
-@media(max-width:850px){
-
-    body{
-        overflow:auto;
-    }
-
-    .app{
-        width:100%;
-        height:100vh;
-        margin:0;
-        display:block;
-    }
-
-    .sidebar{
-        display:none;
-    }
-
-    .main{
-        height:100vh;
-        border:0;
-        border-radius:0;
-    }
-
-    .dashboard{
-        grid-template-columns:1fr;
-        gap:20px;
-        padding:30px 0;
-    }
-
-    .intro{
-        padding-left:0;
-        text-align:center;
-    }
-
-    .intro h2{
-        font-size:38px;
-    }
-
-    .divider{
-        margin:20px auto;
-    }
-
-    .core-panel{
-        max-width:330px;
-        width:100%;
-        margin:auto;
-    }
-
-    .message{
-        max-width:88%;
-    }
-}
+*{box-sizing:border-box}
+:root{--bg:#080b10;--panel:#101720;--border:#25313b;--cyan:#54e7f5;--muted:#8b9aa7;--green:#5af0a0}
+body{margin:0;background:var(--bg);color:#edf6fa;font-family:Arial,sans-serif;height:100vh}
+.app{display:grid;grid-template-columns:220px 1fr;height:100vh;padding:14px;gap:14px}
+.sidebar,.main{background:var(--panel);border:1px solid var(--border);border-radius:16px}
+.sidebar{padding:22px 14px;display:flex;flex-direction:column}
+.logo{font-size:23px;font-weight:bold;letter-spacing:4px;color:var(--cyan);padding:8px}
+.sublogo{font-size:10px;color:var(--muted);letter-spacing:2px;margin:8px}
+.navtitle{font-size:10px;color:var(--muted);letter-spacing:2px;margin:32px 8px 12px}
+.navitem{padding:12px;border-radius:8px;color:#c2d0d9;font-size:13px;margin-bottom:5px}
+.navitem.active{background:#172831;color:var(--cyan);border:1px solid #284b56}
+.status{margin-top:auto;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:12px;line-height:2}
+.green{color:var(--green)}
+.main{display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.header h2{font-size:16px;margin:0}
+.header p{font-size:11px;color:var(--muted);margin:6px 0 0}
+.online{font-size:11px;color:var(--green)}
+.content{flex:1;overflow:auto;padding:24px}
+.welcome{text-align:center;padding:28px 10px 20px}
+.core{width:100px;height:100px;border:2px solid var(--cyan);border-radius:50%;margin:0 auto 20px;display:grid;place-items:center;box-shadow:0 0 28px #54e7f533,inset 0 0 22px #54e7f522;font-size:30px;color:var(--cyan)}
+.welcome h1{font-size:27px;letter-spacing:4px;margin:0}
+.welcome h1 span{color:var(--cyan)}
+.welcome p{color:var(--muted);font-size:13px;line-height:1.7}
+.messages{max-width:850px;margin:0 auto}
+.message{margin:14px 0;padding:14px 16px;border:1px solid var(--border);border-radius:12px;line-height:1.6;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
+.message.user{margin-left:10%;background:#12242c;border-color:#24434e}
+.message.ai{margin-right:10%;background:#111820}
+.sender{font-size:10px;color:var(--cyan);letter-spacing:1px;margin-bottom:7px}
+.composer{padding:16px 20px;border-top:1px solid var(--border)}
+.preview{display:none;align-items:center;gap:12px;margin:0 auto 12px;max-width:850px;padding:9px;border:1px solid var(--border);border-radius:10px}
+.preview img{width:60px;height:60px;object-fit:cover;border-radius:8px}
+.preview-name{flex:1;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+button{cursor:pointer}
 </style>
 </head>
-
 <body>
-
 <div class="app">
-
-<!-- SIDEBAR -->
-
 <aside class="sidebar">
-
-    <div class="logo">
-
-        <div class="logo-box">S</div>
-
-        <div>
-            <h1>SINGAM</h1>
-            <small>TECHNICIAN AI</small>
-        </div>
-
-    </div>
-
-    <div class="section-title">WORKSPACE</div>
-
-    <nav class="nav">
-
-        <button class="active">◉ &nbsp; AI Assistant</button>
-        <button>⌁ &nbsp; Diagnostics</button>
-        <button>◈ &nbsp; System Monitor</button>
-        <button>◇ &nbsp; Projects</button>
-
-    </nav>
-
-    <div class="system">
-
-        <div class="system-title">SYSTEM STATUS</div>
-
-        <div class="stat">
-            <span>Core</span>
-            <span class="good">
-                <i class="dot"></i>ONLINE
-            </span>
-        </div>
-
-        <div class="stat">
-            <span>AI Engine</span>
-            <span class="good">READY</span>
-        </div>
-
-        <div class="stat">
-            <span>Connection</span>
-            <span class="good">STABLE</span>
-        </div>
-
-    </div>
-
+<div class="logo">🦁 SINGAM</div>
+<div class="sublogo">TECHNICIAN AI</div>
+<div class="navtitle">COMMAND CENTER</div>
+<div class="navitem active">◈ &nbsp; Technician Chat</div>
+<div class="navitem">⌁ &nbsp; Diagnostics</div>
+<div class="navitem">▤ &nbsp; Repair Reports</div>
+<div class="status">
+<div>SYSTEM STATUS</div>
+<div class="green">● Interface Ready</div>
+<div>AI: Connected via server</div>
+</div>
 </aside>
-
-
-<!-- MAIN -->
-
 <main class="main">
+<header class="header">
+<div>
+<h2>SINGAM COMMAND CENTER</h2>
+<p>Personal Technician Intelligence System</p>
+</div>
+<div class="online">● SYSTEM ONLINE</div>
+</header>
+<section class="content" id="content">
+<div class="welcome" id="welcome">
+<div class="core">S</div>
+<h1>SINGAM <span>AI</span></h1>
+<p>Your personal technician assistant.<br>Describe a technical problem or upload an image to get started.</p>
+</div>
+<div class="messages" id="chat">
+<div class="message ai">
+<div class="sender">SINGAM</div>
+Hey boss! I'm ready to help troubleshoot your technical problems. What issue are you facing?
+</div>
+</div>
+</section>
+<footer class="composer">
+<div class="preview" id="preview">
+<img id="previewImage" alt="Selected image preview">
+<div class="preview-name" id="previewName"></div>
+<button type="button" id="removeImage" style="background:none;color:#ff8585;border:0;padding:8px">Remove</button>
+</div>
 
-    <header class="header">
+<div style="max-width:850px;margin:auto">
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+<button type="button" class="quick" data-command="My Wi-Fi is connected, but there is no internet.">Wi-Fi issue</button>
+<button type="button" class="quick" data-command="My computer is running slowly.">Slow computer</button>
+<button type="button" class="quick" data-command="Help me diagnose a hardware problem.">Hardware issue</button>
+</div>
 
-        <div>
-            <div class="header-title">
-                SINGAM COMMAND CENTER
-            </div>
+<div style="display:flex;gap:9px;align-items:center">
+<input id="imageInput" type="file" accept="image/*" hidden>
+<button type="button" id="uploadButton" title="Upload image" style="background:#172831;color:var(--cyan);border:1px solid var(--border);border-radius:10px;padding:13px;font-size:18px">＋</button>
 
-            <div class="header-sub">
-                Personal technician intelligence system
-            </div>
-        </div>
-
-        <div class="online">
-            <i class="dot"></i>
-            SYSTEM ONLINE
-        </div>
-
-    </header>
-
-
-    <section class="content" id="chat">
-
-        <div class="dashboard" id="dashboard">
-
-            <div class="intro">
-
-                <div class="eyebrow">
-                    PERSONAL AI / TECHNICIAN SYSTEM
-                </div>
-
-                <h2>
-                    HELLO,<br>
-                    <span>BOSS.</span>
-                </h2>
-
-                <p>
-                    SINGAM is ready to assist with your commands,
-                    projects, technical problems and system tasks.
-                </p>
-
-                <div class="divider"></div>
-
-            </div>
-
-
-            <div class="core-panel">
-
-                <div class="core-head">
-                    <span>AI CORE</span>
-                    <span class="ready">● READY</span>
-                </div>
-
-                <div class="core">
-
-                    <div class="core-ring"></div>
-                    <div class="core-ring"></div>
-                    <div class="core-ring"></div>
-
-                    <div class="core-light"></div>
-
-                </div>
-
-                <div class="core-footer">
-                    <span>PROCESSOR</span>
-                    <b>ACTIVE</b>
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <footer class="composer">
-
-        <div class="input">
-
-            <input
-                id="command"
-                type="text"
-                placeholder="Enter a command for SINGAM..."
-                autocomplete="off"
-            >
-
-            <button class="send" onclick="sendCommand()">
-                SEND
-            </button>
-
-        </div>
-
-        <div class="quick">
-
-            <button onclick="quick('System status')">
-                System status
-            </button>
-
-            <button onclick="quick('What can you do?')">
-                Capabilities
-            </button>
-
-            <button onclick="quick('Help me')">
-                Help
-            </button>
-
-            <button onclick="quick('Tell me a joke')">
-                Something fun
-            </button>
-
-        </div>
-
-    </footer>
-
+<input id="command" type="text" placeholder="Describe your technical problem..." autocomplete="off" style="flex:1;min-width:0;background:#080d12;color:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;outline:none">
+<button type="button" id="sendButton" style="background:var(--cyan);color:#061014;border:0;border-radius:10px;padding:14px 20px;font-weight:bold">SEND</button>
+</div>
+<div id="statusMessage" style="font-size:11px;color:var(--muted);margin-top:9px">Enter your issue or select an image.</div>
+</div>
+</footer>
 </main>
-
 </div>
 
 
+<style>
+.quick {
+  background: #111820;
+  color: #c2d0d9;
+  border: 1px solid #25313b;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 11px;
+}
+.quick:hover {
+  border-color: #54e7f5;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+</style>
+
 <script>
-
-const input = document.getElementById("command");
+const imageInput = document.getElementById("imageInput");
+const uploadButton = document.getElementById("uploadButton");
+const preview = document.getElementById("preview");
+const previewImage = document.getElementById("previewImage");
+const previewName = document.getElementById("previewName");
+const removeImage = document.getElementById("removeImage");
+const command = document.getElementById("command");
+const sendButton = document.getElementById("sendButton");
 const chat = document.getElementById("chat");
-const dashboard = document.getElementById("dashboard");
+const content = document.getElementById("content");
+const statusMessage = document.getElementById("statusMessage");
 
+let selectedImage = null;
+let imageURL = null;
+let busy = false;
 
-input.addEventListener("keydown", function(e){
+function showStatus(message) {
+  statusMessage.textContent = message;
+}
 
-    if(e.key === "Enter"){
-        sendCommand();
-    }
+function addMessage(sender, message, type) {
+  const box = document.createElement("div");
+  box.className = "message " + type;
 
+  const heading = document.createElement("div");
+  heading.className = "sender";
+  heading.textContent = sender;
+
+  const body = document.createElement("div");
+  body.textContent = message;
+
+  box.append(heading, body);
+  chat.appendChild(box);
+  content.scrollTop = content.scrollHeight;
+}
+
+uploadButton.addEventListener("click", () => {
+  if (!busy) imageInput.click();
 });
 
+imageInput.addEventListener("change", () => {
+  const file = imageInput.files[0];
 
-function quick(text){
+  if (!file) return;
 
-    input.value = text;
-    sendCommand();
+  if (!file.type.startsWith("image/")) {
+    showStatus("Please select a valid image.");
+    imageInput.value = "";
+    return;
+  }
 
-}
+  if (file.size > 5 * 1024 * 1024) {
+    showStatus("Image must be smaller than 5 MB.");
+    imageInput.value = "";
+    return;
+  }
 
+  selectedImage = file;
 
-function addMessage(text,type){
+  if (imageURL) URL.revokeObjectURL(imageURL);
+  imageURL = URL.createObjectURL(file);
 
-    if(dashboard){
-        dashboard.style.display = "none";
+  previewImage.src = imageURL;
+  previewName.textContent = file.name;
+  preview.style.display = "flex";
+
+  showStatus("Image selected. Preview ready.");
+});
+
+removeImage.addEventListener("click", () => {
+  selectedImage = null;
+  imageInput.value = "";
+  previewImage.removeAttribute("src");
+  preview.style.display = "none";
+
+  if (imageURL) URL.revokeObjectURL(imageURL);
+  imageURL = null;
+
+  showStatus("Image removed. You can select another.");
+});
+
+document.querySelectorAll(".quick").forEach(button => {
+  button.addEventListener("click", () => {
+    command.value = button.dataset.command;
+    command.focus();
+  });
+});
+
+async function sendCommand() {
+  if (busy) return;
+
+  const message = command.value.trim();
+
+  if (selectedImage) {
+    showStatus(
+      "Image preview works. Image analysis backend connection is the next step."
+    );
+    return;
+  }
+
+  if (!message) {
+    showStatus("Please enter your technical problem.");
+    command.focus();
+    return;
+  }
+
+  busy = true;
+  sendButton.disabled = true;
+  uploadButton.disabled = true;
+
+  addMessage("YOU", message, "user");
+  command.value = "";
+  showStatus("SINGAM is thinking...");
+
+  try {
+    const response = await fetch("/ask", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ command: message })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Request failed.");
     }
 
-    const row = document.createElement("div");
+    addMessage(
+      "SINGAM",
+      data.reply || "I received an empty response.",
+      "ai"
+    );
 
-    row.className =
-        "message-row " +
-        (type === "user" ? "user" : "");
+    showStatus("Response received.");
+  } catch (error) {
+    addMessage(
+      "SINGAM",
+      "I couldn't connect to the server. Please check whether the server is running.",
+      "ai"
+    );
 
-    const message = document.createElement("div");
-
-    message.className =
-        "message " +
-        (type === "user" ? "user" : "ai");
-
-    message.textContent = text;
-
-    row.appendChild(message);
-
-    chat.appendChild(row);
-
-    chat.scrollTop = chat.scrollHeight;
-
+    showStatus("Connection error: " + error.message);
+  } finally {
+    busy = false;
+    sendButton.disabled = false;
+    uploadButton.disabled = false;
+  }
 }
 
+sendButton.addEventListener("click", sendCommand);
 
-async function sendCommand(){
-
-    const command = input.value.trim();
-
-    if(!command) return;
-
-    addMessage(command,"user");
-
-    input.value = "";
-
-    try{
-
-        const response = await fetch("/ask",{
-
-            method:"POST",
-
-            headers:{
-                "Content-Type":"application/json"
-            },
-
-            body:JSON.stringify({
-                command:command
-            })
-
-        });
-
-        const data = await response.json();
-
-        if(data.reply){
-
-            addMessage(data.reply,"ai");
-
-            speak(data.reply);
-
-        }else{
-
-            addMessage(
-                "Sorry boss, I didn't receive a proper response.",
-                "ai"
-            );
-
-        }
-
-    }catch(error){
-
-        console.error(error);
-
-        addMessage(
-            "Sorry boss, my AI Brain is temporarily unavailable.",
-            "ai"
-        );
-
-    }
-
-}
-
-
-function speak(text){
-
-    if(!("speechSynthesis" in window)) return;
-
-    speechSynthesis.cancel();
-
-    const voice =
-        new SpeechSynthesisUtterance(text);
-
-    voice.lang = "en-US";
-    voice.rate = 0.88;
-    voice.pitch = 0.55;
-    voice.volume = 1;
-
-    speechSynthesis.speak(voice);
-
-}
-
+command.addEventListener("keydown", event => {
+  if (event.key === "Enter") sendCommand();
+});
 </script>
-
 </body>
 </html>

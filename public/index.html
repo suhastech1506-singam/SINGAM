@@ -40,6 +40,33 @@ body{margin:0;background:var(--bg);color:#edf6fa;font-family:Arial,sans-serif;he
 .preview-name{flex:1;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
 button{cursor:pointer}
 </style>
+<style>
+/* SINGAM mobile layout improvements */
+@media screen and (max-width: 600px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  #command {
+    min-width: 0;
+    width: 100%;
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  #uploadButton,
+  #sendButton {
+    flex-shrink: 0;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  main {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+</style>
 </head>
 <body>
 <div class="app">

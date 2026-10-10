@@ -738,11 +738,26 @@ async function sendCommand() {
       );
     }
 
-    if (data.reply) {
-      addMessage("ai", data.reply);
-    } else {
-      addMessage("ai", "The server returned no reply. Please try again.");
-    }
+    
+if (data.reply) {
+  addMessage("ai", data.reply);
+
+  // Speak SINGAM's AI reply
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+
+    const message = new SpeechSynthesisUtterance(data.reply);
+    message.lang = "en-US";
+    message.rate = 0.9;
+    message.pitch = 0.7;
+    message.volume = 1;
+
+    window.speechSynthesis.speak(message);
+  }
+} else {
+  addMessage("ai", "The server returned no reply. Please try again.");
+}
+
   } catch (error) {
     addMessage(
       "ai",

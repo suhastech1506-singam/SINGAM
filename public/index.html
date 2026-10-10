@@ -784,6 +784,34 @@ document.querySelectorAll(".quick-btn").forEach(button => {
       Math.min(commandInput.scrollHeight, 140) + "px";
   });
 });
+
+
+function testVoice() {
+  if (!("speechSynthesis" in window)) {
+    alert("Voice is not supported in this browser.");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const message = new SpeechSynthesisUtterance(
+    "Hello. I am SINGAM. Voice system is online."
+  );
+
+  message.lang = "en-US";
+  message.rate = 0.9;
+  message.pitch = 0.7;
+  message.volume = 1;
+
+  message.onstart = () => console.log("SINGAM voice started");
+  message.onend = () => console.log("SINGAM voice finished");
+  message.onerror = (event) =>
+    console.error("Voice error:", event.error);
+
+  window.speechSynthesis.speak(message);
+}
+window.testVoice = testVoice;
+
 </script>
 </body>
 </html>

@@ -78,6 +78,92 @@ function creatorQuestion(message) {
   return /\b(who\s+(created|made|built|programmed|developed)\s+you|who'?s\s+your\s+(creator|maker|developer)|who\s+is\s+your\s+(creator|maker|developer)|who\s+made\s+singam|who\s+created\s+singam)\b/i.test(message);
 }
 
+/* -------------------- ERROR CODE DETECTOR -------------------- */
+
+function isErrorCodeRequest(message) {
+  return /\b(error\s*code|fault\s*code|error\s*message|fault\s*diagnosis|diagnose\s+(this\s+)?(error|code|fault)|code\s+meaning|troubleshoot(ing)?\s+(this\s+)?(error|code|fault))\b/i.test(
+    String(message || "")
+  );
+}
+
+function buildErrorCodeInstructions() {
+  return `
+ERROR CODE DETECTOR — SPECIALIST MODE
+
+Your task is to help technicians interpret device error codes accurately.
+
+SUPPORTED DEVICES:
+- Desktop computers and laptops
+- Air conditioners
+- Refrigerators
+- Washing machines
+- Televisions
+- Printers and networking equipment
+- Chargers, adapters, circuit boards and other electronics
+
+DIAGNOSTIC PROCESS:
+
+1. Identify the device category, manufacturer, exact model and displayed
+   error code whenever that information is available.
+
+2. Error codes can mean different things across manufacturers and models.
+   Never assume that a code has the same meaning on every device.
+
+3. If essential information is missing, ask one focused question.
+   For example, request the appliance brand and model before interpreting
+   a model-specific code.
+
+4. Explain the code's meaning only when reasonably supported by reliable
+   knowledge, manufacturer documentation supplied by the user, or other
+   evidence available in the conversation.
+
+5. Never invent an official manufacturer definition, manual reference,
+   specification, diagnostic result or source lookup.
+
+6. Distinguish clearly between:
+   - Confirmed information
+   - Possible meanings
+   - Possible causes
+   - Checks needed to narrow down the fault
+
+7. Give ordered troubleshooting steps, starting with safe external checks.
+   Explain what the user should observe and what the observation may mean.
+
+8. Do not recommend replacing a component solely because an error code
+   appears. Explain what additional checks are needed first.
+
+9. If the code is unfamiliar or its meaning cannot be verified, say so.
+   Ask for a photo of the display, exact model number, or the relevant
+   manual page when that would help.
+
+10. Do not claim to have searched the internet or checked manufacturer
+    documentation unless an actual source or tool result is available.
+
+11. Include safety warnings relevant to the device. Never recommend
+    opening or probing live mains equipment, bypassing safety interlocks,
+    defeating fuses, or touching exposed live conductors.
+
+12. For dangerous high-voltage equipment, recommend a qualified technician.
+
+RECOMMENDED RESPONSE FORMAT:
+
+Device:
+Brand and model:
+Displayed error code:
+Meaning:
+Possible causes:
+Safe checks:
+Recommended next step:
+Safety warning:
+
+Use only relevant sections. Keep the answer concise for simple questions
+and more detailed for complex diagnostic cases.
+
+If the user provides only a code without enough context, do not guess.
+Ask for the device category, brand and model as needed.
+`;
+}
+
 function getRelevantMemory(userId, message) {
   const records = readMemory().filter(
     item => item && item.userId === userId
@@ -578,6 +664,11 @@ MEMORY:
   these rules.
 `;
 
+  // Add specialist instructions for error-code questions.
+  if (isErrorCodeRequest(message)) {
+    prompt += "\n\n" + buildErrorCodeInstructions();
+  }
+
   if (relevantMemory) {
     prompt +=
       "\n\nRELEVANT USER MEMORY (use only when applicable):\n" +
@@ -597,7 +688,7 @@ app.get("/health", (req, res) => {
   res.json({
     status: "online",
     service: "SINGAM",
-    mode: "Universal Technician AI",
+    mode: "Universal Technician AI + Error Code Detector",
     timestamp: new Date().toISOString()
   });
 });
@@ -813,8 +904,6 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log("🦁 SINGAM IS ONLINE");
   console.log(`Server running on port ${PORT}`);
   console.log(`Daily chat limit: ${DAILY_CHAT_LIMIT}`);
-  console.log("Mode: Universal Technician AI");
+  console.log("Mode: Universal Technician AI + Error Code Detector");
   console.log("Language mode: Multilingual");
 });
-
-

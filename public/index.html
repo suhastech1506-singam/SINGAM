@@ -7,9 +7,7 @@
 <title>SINGAM | Technician AI</title>
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 :root {
   --bg: #080b10;
@@ -31,13 +29,8 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-button, textarea, input {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
+button, textarea, input { font: inherit; }
+button { cursor: pointer; }
 
 .app {
   width: min(100%, 1050px);
@@ -107,9 +100,7 @@ header {
   align-items: flex-start;
 }
 
-.message.user {
-  align-items: flex-end;
-}
+.message.user { align-items: flex-end; }
 
 .message-label {
   margin: 0 0 7px;
@@ -119,9 +110,7 @@ header {
   color: var(--cyan);
 }
 
-.message.user .message-label {
-  color: var(--muted);
-}
+.message.user .message-label { color: var(--muted); }
 
 .bubble {
   max-width: 92%;
@@ -158,9 +147,7 @@ header {
   font-weight: bold;
 }
 
-.download-pdf-btn:hover {
-  background: #1b4652;
-}
+.download-pdf-btn:hover { background: #1b4652; }
 
 .composer {
   padding: 15px;
@@ -184,9 +171,7 @@ header {
   line-height: 1.5;
 }
 
-#messageInput:focus {
-  border-color: var(--cyan);
-}
+#messageInput:focus { border-color: var(--cyan); }
 
 .controls {
   display: flex;
@@ -206,9 +191,7 @@ header {
   font-weight: bold;
 }
 
-.btn:hover {
-  border-color: var(--cyan);
-}
+.btn:hover { border-color: var(--cyan); }
 
 .btn.primary {
   margin-left: auto;
@@ -266,9 +249,7 @@ header {
   font-size: 12px;
 }
 
-.suggestion:hover {
-  border-color: var(--cyan);
-}
+.suggestion:hover { border-color: var(--cyan); }
 
 .hint {
   margin: 12px 2px 0;
@@ -285,41 +266,14 @@ footer {
   letter-spacing: 1px;
 }
 
-.error {
-  color: var(--danger);
-}
-
 @media (max-width: 600px) {
-  .app {
-    padding: 10px;
-  }
-
-  header {
-    padding: 18px 10px;
-  }
-
-  .logo {
-    letter-spacing: 3px;
-  }
-
-  .subtitle {
-    font-size: 11px;
-    letter-spacing: 1px;
-  }
-
-  .chat {
-    min-height: 280px;
-    padding: 12px;
-  }
-
-  .bubble {
-    max-width: 100%;
-    font-size: 14px;
-  }
-
-  .composer {
-    padding: 10px;
-  }
+  .app { padding: 10px; }
+  header { padding: 18px 10px; }
+  .logo { letter-spacing: 3px; }
+  .subtitle { font-size: 11px; letter-spacing: 1px; }
+  .chat { min-height: 280px; padding: 12px; }
+  .bubble { max-width: 100%; font-size: 14px; }
+  .composer { padding: 10px; }
 
   .controls {
     display: grid;
@@ -337,9 +291,7 @@ footer {
     grid-column: 1 / -1;
   }
 
-  .suggestion {
-    font-size: 11px;
-  }
+  .suggestion { font-size: 11px; }
 }
 </style>
 </head>
@@ -359,7 +311,7 @@ footer {
   <main class="chat" id="chat" aria-live="polite">
     <div class="message ai">
       <div class="message-label">SINGAM</div>
-      <div class="bubble">Hello! I am SINGAM Technician AI. Ask a technical question, upload an image or a text-based PDF, or request a report in PDF format.</div>
+      <div class="bubble">Hello boss! I am SINGAM Technician AI. Type or speak your question, upload an image or text-based PDF, or request a PDF report.</div>
     </div>
   </main>
 
@@ -385,6 +337,7 @@ footer {
 
     <div class="controls">
       <button class="btn" id="uploadBtn" type="button">📎 Upload File</button>
+      <button class="btn" id="micBtn" type="button">🎤 Speak</button>
       <button class="btn" id="voiceBtn" type="button">🔊 Voice: On</button>
       <button class="btn primary" id="sendBtn" type="button">SEND ➤</button>
     </div>
@@ -399,8 +352,8 @@ footer {
 
     <p class="hint">
       Press Enter to send · Shift + Enter for a new line<br>
-      PDF extraction works for text-based PDFs. Scanned PDFs may require OCR.
-      Maximum upload size: 5 MB.
+      Tap Speak and allow microphone access to use voice input.<br>
+      PDF extraction works for text-based PDFs. Maximum upload size: 5 MB.
     </p>
   </section>
 
@@ -420,11 +373,14 @@ const fileName = document.getElementById("fileName");
 const imagePreview = document.getElementById("imagePreview");
 const removeFileBtn = document.getElementById("removeFileBtn");
 const voiceBtn = document.getElementById("voiceBtn");
+const micBtn = document.getElementById("micBtn");
 
 let selectedFile = null;
 let selectedImageURL = null;
 let voiceEnabled = true;
 let busy = false;
+let recognition = null;
+let isListening = false;
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -461,11 +417,7 @@ function addMessage(role, text, imageURL = null) {
 }
 
 function addDownloadButton(messageElement, pdfData) {
-  if (
-    !pdfData ||
-    typeof pdfData.data !== "string" ||
-    !pdfData.data.length
-  ) {
+  if (!pdfData || typeof pdfData.data !== "string" || !pdfData.data.length) {
     return;
   }
 
@@ -502,7 +454,7 @@ function addDownloadButton(messageElement, pdfData) {
       link.click();
       link.remove();
 
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
     } catch (error) {
       console.error("PDF download error:", error);
       alert("Could not download the PDF. Please try again.");
@@ -513,18 +465,94 @@ function addDownloadButton(messageElement, pdfData) {
   scrollToBottom();
 }
 
+/* Spoken output */
 function speakText(text) {
   if (!voiceEnabled || !("speechSynthesis" in window)) return;
 
   window.speechSynthesis.cancel();
 
-  const utterance = new SpeechSynthesisUtterance(text);
+  const cleanText = String(text || "").trim();
+  if (!cleanText) return;
+
+  const utterance = new SpeechSynthesisUtterance(cleanText);
   utterance.lang = "en-US";
   utterance.rate = 0.9;
   utterance.pitch = 1;
+  utterance.volume = 1;
+
+  utterance.onerror = (event) => {
+    console.warn("Speech output error:", event.error);
+  };
 
   window.speechSynthesis.speak(utterance);
 }
+
+/* Microphone input */
+const SpeechRecognitionAPI =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognitionAPI) {
+  recognition = new SpeechRecognitionAPI();
+  recognition.lang = "en-US";
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  recognition.onstart = () => {
+    isListening = true;
+    micBtn.textContent = "🔴 Listening...";
+  };
+
+  recognition.onresult = (event) => {
+    let transcript = "";
+
+    for (let i = 0; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+
+    messageInput.value = transcript;
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    micBtn.textContent = "🎤 Speak";
+  };
+
+  recognition.onerror = (event) => {
+    isListening = false;
+    micBtn.textContent = "🎤 Speak";
+
+    if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+      alert("Microphone access is blocked. Allow microphone permission in your browser settings.");
+    } else if (event.error === "no-speech") {
+      alert("No speech detected. Please tap Speak and try again.");
+    } else {
+      console.warn("Microphone error:", event.error);
+    }
+  };
+} else {
+  micBtn.title = "Speech recognition is not supported by this browser.";
+}
+
+micBtn.addEventListener("click", () => {
+  if (busy) return;
+
+  if (!recognition) {
+    alert("Voice input is not supported in this browser. Please try an updated Chrome browser.");
+    return;
+  }
+
+  if (isListening) {
+    recognition.stop();
+    return;
+  }
+
+  try {
+    recognition.start();
+  } catch (error) {
+    console.error("Could not start microphone:", error);
+    alert("Could not start the microphone. Please try again.");
+  }
+});
 
 function clearSelectedFile() {
   selectedFile = null;
@@ -592,6 +620,8 @@ voiceBtn.addEventListener("click", () => {
 
   if (!voiceEnabled && "speechSynthesis" in window) {
     window.speechSynthesis.cancel();
+  } else if (voiceEnabled) {
+    speakText("Hello boss. SINGAM voice system is ready.");
   }
 });
 
@@ -658,6 +688,7 @@ async function sendCommand() {
   busy = true;
   sendBtn.disabled = true;
   uploadBtn.disabled = true;
+  micBtn.disabled = true;
   sendBtn.textContent = "WORKING...";
 
   const waitingMessage = addMessage("ai", "Working on your request...");
@@ -668,8 +699,10 @@ async function sendCommand() {
     if (attachedFile) {
       const base64 = await fileToBase64(attachedFile);
 
-      if (attachedFile.type === "application/pdf" ||
-          attachedFile.name.toLowerCase().endsWith(".pdf")) {
+      if (
+        attachedFile.type === "application/pdf" ||
+        attachedFile.name.toLowerCase().endsWith(".pdf")
+      ) {
         payload.pdf = {
           data: base64,
           mimeType: "application/pdf",
@@ -700,11 +733,10 @@ async function sendCommand() {
     }
 
     if (!response.ok) {
-      const errorMessage =
-        data.reply ||
-        data.error ||
-        "The request failed with status " + response.status + ".";
-      throw new Error(errorMessage);
+      throw new Error(
+        data.reply || data.error ||
+        "The request failed with status " + response.status + "."
+      );
     }
 
     waitingMessage.remove();
@@ -739,6 +771,7 @@ async function sendCommand() {
     busy = false;
     sendBtn.disabled = false;
     uploadBtn.disabled = false;
+    micBtn.disabled = false;
     sendBtn.textContent = "SEND ➤";
     messageInput.focus();
   }

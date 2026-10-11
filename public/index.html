@@ -4,867 +4,528 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SINGAM | Technician AI</title>
-
+<title>SINGAM | AI Command Center</title>
 <style>
-* { box-sizing: border-box; }
-
 :root {
-  --bg: #080b10;
-  --panel: #101720;
-  --panel2: #151f2a;
-  --border: #283542;
-  --cyan: #54e7f5;
-  --text: #edf6fa;
-  --muted: #93a4b2;
-  --green: #55e6a5;
-  --danger: #ff7b7b;
+  --bg:#070b10; --panel:#101720; --panel2:#0b121a;
+  --border:#253441; --cyan:#55eaff; --text:#edf7ff;
+  --muted:#91a3b4; --green:#55e6a5; --red:#ff7777;
 }
-
+* { box-sizing:border-box; }
 body {
-  margin: 0;
-  min-height: 100vh;
-  background: radial-gradient(circle at top, #13212c, var(--bg) 55%);
-  color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
+  margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
 }
-
-button, textarea, input { font: inherit; }
-button { cursor: pointer; }
-
-.app {
-  width: min(100%, 1050px);
-  min-height: 100vh;
-  margin: auto;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
+button,input,textarea { font:inherit; }
+button { cursor:pointer; }
+button:disabled { opacity:.5; cursor:not-allowed; }
+.topbar {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:16px 5%; border-bottom:1px solid var(--border);
+  background:#090f16; position:sticky; top:0; z-index:5;
 }
-
-header {
-  padding: 22px;
-  background: rgba(16, 23, 32, 0.95);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  text-align: center;
+.brand { font-size:23px; font-weight:900; letter-spacing:3px; color:var(--cyan); }
+.subtitle { font-size:11px; color:var(--muted); margin-top:5px; }
+.status { color:var(--green); font-size:12px; }
+main { width:min(920px,94%); margin:24px auto; }
+.panel {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:15px; padding:20px; margin-bottom:16px;
 }
-
-.logo {
-  color: var(--cyan);
-  font-size: clamp(30px, 5vw, 42px);
-  font-weight: 900;
-  letter-spacing: 5px;
-  margin: 0;
-}
-
-.subtitle {
-  margin: 9px 0 13px;
-  font-size: 13px;
-  letter-spacing: 2px;
-  color: var(--muted);
-}
-
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--green);
-  font-size: 12px;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  background: var(--green);
-  border-radius: 50%;
-  box-shadow: 0 0 10px var(--green);
-}
-
-.chat {
-  flex: 1;
-  min-height: 300px;
-  margin: 18px 0;
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: rgba(12, 17, 24, 0.88);
-  overflow-y: auto;
-}
-
-.message {
-  margin: 0 0 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.message.user { align-items: flex-end; }
-
-.message-label {
-  margin: 0 0 7px;
-  font-size: 11px;
-  font-weight: bold;
-  letter-spacing: 1.5px;
-  color: var(--cyan);
-}
-
-.message.user .message-label { color: var(--muted); }
-
-.bubble {
-  max-width: 92%;
-  padding: 13px 15px;
-  background: var(--panel2);
-  border: 1px solid var(--border);
-  border-radius: 13px;
-  line-height: 1.65;
-  font-size: 14px;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-
-.message.user .bubble {
-  background: #12303a;
-  border-color: #245360;
-}
-
-.bubble img {
-  display: block;
-  max-width: 100%;
-  max-height: 280px;
-  margin-top: 8px;
-  border-radius: 9px;
-}
-
-.download-pdf-btn {
-  margin-top: 10px;
-  padding: 11px 15px;
-  border: 1px solid var(--cyan);
-  border-radius: 9px;
-  background: #12303a;
-  color: var(--cyan);
-  font-weight: bold;
-}
-
-.download-pdf-btn:hover { background: #1b4652; }
-
-.composer {
-  padding: 15px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-}
-
-#messageInput {
-  display: block;
-  width: 100%;
-  min-height: 95px;
-  max-height: 220px;
-  resize: vertical;
-  padding: 13px;
-  background: #080d13;
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  outline: none;
-  line-height: 1.5;
-}
-
-#messageInput:focus { border-color: var(--cyan); }
-
-.controls {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 12px;
-}
-
+h2 { font-size:18px; margin:0 0 14px; }
+h3 { margin:0 0 10px; font-size:15px; }
+.small { color:var(--muted); font-size:12px; line-height:1.6; }
+.field { width:100%; padding:13px; margin:7px 0; border-radius:9px;
+  border:1px solid var(--border); background:var(--panel2); color:var(--text); }
 .btn {
-  min-height: 42px;
-  padding: 10px 15px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: #17232e;
-  color: var(--text);
-  font-weight: bold;
+  padding:11px 15px; border:1px solid var(--border); border-radius:9px;
+  background:#172631; color:var(--text); font-weight:700;
 }
-
-.btn:hover { border-color: var(--cyan); }
-
-.btn.primary {
-  margin-left: auto;
-  background: var(--cyan);
-  border-color: var(--cyan);
-  color: #061015;
+.btn.primary { background:var(--cyan); color:#041016; border-color:var(--cyan); }
+.btn.danger { color:var(--red); }
+.btnrow { display:flex; gap:8px; flex-wrap:wrap; margin-top:9px; }
+.hidden { display:none !important; }
+.auth-message { font-size:13px; margin-top:12px; white-space:pre-wrap; }
+.good { color:var(--green); } .bad { color:var(--red); }
+.usage-row { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.usage { color:var(--cyan); font-size:13px; }
+.chatbox {
+  height: min(48vh,480px); min-height:250px; overflow-y:auto;
+  padding:14px; background:var(--panel2); border:1px solid var(--border);
+  border-radius:12px; display:flex; flex-direction:column; gap:12px;
 }
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.file-info {
-  display: none;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  color: var(--muted);
-  font-size: 13px;
-  overflow-wrap: anywhere;
-}
-
-.file-info img {
-  width: 55px;
-  height: 55px;
-  object-fit: cover;
-  border-radius: 7px;
-}
-
-.remove-file {
-  margin-left: auto;
-  color: var(--danger);
-  background: transparent;
-  border: 0;
-  font-size: 20px;
-}
-
-.suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.suggestion {
-  padding: 9px 12px;
-  color: var(--cyan);
-  background: #111c26;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  font-size: 12px;
-}
-
-.suggestion:hover { border-color: var(--cyan); }
-
-.hint {
-  margin: 12px 2px 0;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-footer {
-  padding: 18px 0 4px;
-  color: var(--muted);
-  text-align: center;
-  font-size: 11px;
-  letter-spacing: 1px;
-}
-
-@media (max-width: 600px) {
-  .app { padding: 10px; }
-  header { padding: 18px 10px; }
-  .logo { letter-spacing: 3px; }
-  .subtitle { font-size: 11px; letter-spacing: 1px; }
-  .chat { min-height: 280px; padding: 12px; }
-  .bubble { max-width: 100%; font-size: 14px; }
-  .composer { padding: 10px; }
-
-  .controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .btn {
-    width: 100%;
-    padding: 10px 8px;
-    font-size: 12px;
-  }
-
-  .btn.primary {
-    margin-left: 0;
-    grid-column: 1 / -1;
-  }
-
-  .suggestion { font-size: 11px; }
+.msg { max-width:92%; padding:12px 14px; border-radius:12px;
+  white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.55; font-size:14px; }
+.msg.bot { align-self:flex-start; background:#14232e; border:1px solid #263b49; }
+.msg.user { align-self:flex-end; background:#12313b; border:1px solid #28616b; }
+.msg img { max-width:100%; max-height:220px; border-radius:8px; display:block; margin-bottom:8px; }
+.composer { display:flex; flex-direction:column; gap:9px; margin-top:12px; }
+textarea { resize:vertical; min-height:75px; max-height:200px; }
+.attach-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.file-label { font-size:12px; color:var(--muted); }
+#attachmentPreview { font-size:12px; color:var(--cyan); }
+.suggestions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.suggestions button { font-size:12px; }
+footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
+@media(max-width:600px) {
+  .topbar { padding:13px 4%; }
+  .brand { font-size:20px; }
+  main { width:94%; margin:15px auto; }
+  .panel { padding:14px; }
+  .chatbox { height:45vh; }
+  .msg { max-width:98%; }
 }
 </style>
 </head>
-
 <body>
-<div class="app">
+<header class="topbar">
+  <div>
+    <div class="brand">🦁 SINGAM</div>
+    <div class="subtitle">PERSONAL TECHNICIAN INTELLIGENCE SYSTEM</div>
+  </div>
+  <div class="status" id="systemStatus">● CONNECTING</div>
+</header>
 
-  <header>
-    <h1 class="logo">SINGAM</h1>
-    <p class="subtitle">TECHNICIAN AI COMMAND CENTER</p>
-    <div class="status">
-      <span class="status-dot"></span>
-      ASSISTANT READY
-    </div>
-  </header>
-
-  <main class="chat" id="chat" aria-live="polite">
-    <div class="message ai">
-      <div class="message-label">SINGAM</div>
-      <div class="bubble">Hello boss! I am SINGAM Technician AI. Type or speak your question, upload an image or text-based PDF, or request a PDF report.</div>
-    </div>
-  </main>
-
-  <section class="composer">
-    <textarea
-      id="messageInput"
-      placeholder="Ask SINGAM a question..."
-      aria-label="Message"
-    ></textarea>
-
-    <div class="file-info" id="fileInfo">
-      <img id="imagePreview" alt="Selected image preview" hidden>
-      <span id="fileName"></span>
-      <button class="remove-file" id="removeFileBtn" type="button" aria-label="Remove attachment">×</button>
-    </div>
-
-    <input
-      id="fileInput"
-      type="file"
-      accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf"
-      hidden
-    >
-
-    <div class="controls">
-      <button class="btn" id="uploadBtn" type="button">📎 Upload File</button>
-      <button class="btn" id="micBtn" type="button">🎤 Speak</button>
-      <button class="btn" id="voiceBtn" type="button">🔊 Voice: On</button>
-      <button class="btn primary" id="sendBtn" type="button">SEND ➤</button>
-    </div>
-
-    <div class="suggestions">
-      <button class="suggestion" data-prompt="Help me troubleshoot an AC problem.">AC problem</button>
-      <button class="suggestion" data-prompt="Help me troubleshoot a washing machine.">Washing machine</button>
-      <button class="suggestion" data-prompt="Help me troubleshoot a refrigerator.">Refrigerator</button>
-      <button class="suggestion" data-prompt="Help me troubleshoot a circuit board.">Circuit board</button>
-      <button class="suggestion" data-prompt="Explain the key points in a PDF that I upload.">Summarize PDF</button>
-    </div>
-
-    <p class="hint">
-      Press Enter to send · Shift + Enter for a new line<br>
-      Tap Speak and allow microphone access to use voice input.<br>
-      PDF extraction works for text-based PDFs. Maximum upload size: 5 MB.
-    </p>
+<main>
+  <section class="panel" id="authPanel">
+    <h2>🔐 SINGAM Account</h2>
+    <p class="small">Create your account or sign in to access your personal assistant. Your daily chat allowance is linked to your account.</p>
+    <form id="authForm">
+      <label class="small" for="email">Email address</label>
+      <input class="field" id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      <label class="small" for="password">Password (minimum 8 characters)</label>
+      <input class="field" id="password" type="password" autocomplete="current-password" minlength="8" placeholder="Enter password" required>
+      <div class="btnrow">
+        <button class="btn primary" type="submit" id="signInBtn">Sign In</button>
+        <button class="btn" type="button" id="signUpBtn">Create Account</button>
+      </div>
+    </form>
+    <div id="authMessage" class="auth-message" aria-live="polite"></div>
+    <p class="small">If email confirmation is enabled, check your inbox after creating an account. Never share your password or access token.</p>
   </section>
 
-  <footer>
-    SINGAM TECHNICIAN AI · TECHNICAL ASSISTANCE PROTOTYPE
-  </footer>
-</div>
+  <section class="panel hidden" id="accountPanel">
+    <div class="usage-row">
+      <div>
+        <h2>Welcome, Boss 🫡</h2>
+        <div class="small" id="accountEmail"></div>
+      </div>
+      <button class="btn danger" id="signOutBtn" type="button">Sign Out</button>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--border);margin:16px 0">
+    <div class="usage-row">
+      <span class="usage" id="usageText">Daily chats: loading...</span>
+      <span class="small" id="usageDate"></span>
+    </div>
+    <p class="small">Your daily count resets according to India Standard Time (IST). Provider availability and free-model quotas are separate from this limit.</p>
+  </section>
 
+  <section class="panel hidden" id="chatPanel">
+    <div class="usage-row" style="margin-bottom:12px">
+      <h2>⚡ Command Center</h2>
+      <span class="small">SYSTEM ONLINE</span>
+    </div>
+    <div class="chatbox" id="chatBox" aria-live="polite">
+      <div class="msg bot">Hey boss! Full power-la irukken 😎 Naan SINGAM. Enna matter?</div>
+    </div>
+    <div class="composer">
+      <textarea id="messageInput" class="field" placeholder="Ask SINGAM anything..." aria-label="Message"></textarea>
+      <div class="attach-row">
+        <label class="btn" for="fileInput">📎 Attach image/PDF</label>
+        <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf" hidden>
+        <span class="file-label" id="attachmentPreview">No attachment</span>
+        <button class="btn" type="button" id="clearFileBtn">Remove file</button>
+      </div>
+      <div class="btnrow">
+        <button class="btn primary" id="sendBtn" type="button">SEND ➤</button>
+        <button class="btn" id="voiceInputBtn" type="button">🎙 Voice Input</button>
+        <button class="btn" id="voiceToggleBtn" type="button">🔊 Voice: ON</button>
+        <button class="btn" id="stopVoiceBtn" type="button">Stop Voice</button>
+      </div>
+    </div>
+    <div class="suggestions">
+      <button class="btn suggestion" type="button" data-prompt="Explain this step by step.">Explain step by step</button>
+      <button class="btn suggestion" type="button" data-prompt="Help me troubleshoot a technical problem. Ask for details if needed.">Troubleshoot</button>
+      <button class="btn suggestion" type="button" data-prompt="Give me a cybersecurity learning exercise suitable for a beginner.">Cybersecurity</button>
+    </div>
+    <p class="small" style="margin-top:12px">Don't upload passwords, API keys, financial details, or other sensitive information.</p>
+  </section>
+</main>
+<footer>SINGAM AI · Secure sign-in · Daily usage managed by the server</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
 
-const chat = document.getElementById("chat");
-const messageInput = document.getElementById("messageInput");
-const sendBtn = document.getElementById("sendBtn");
-const uploadBtn = document.getElementById("uploadBtn");
-const fileInput = document.getElementById("fileInput");
-const fileInfo = document.getElementById("fileInfo");
-const fileName = document.getElementById("fileName");
-const imagePreview = document.getElementById("imagePreview");
-const removeFileBtn = document.getElementById("removeFileBtn");
-const voiceBtn = document.getElementById("voiceBtn");
-const micBtn = document.getElementById("micBtn");
-
+let supabaseClient = null;
+let dailyLimit = 100;
 let selectedFile = null;
-let selectedImageURL = null;
-let voiceEnabled = true;
 let busy = false;
+let voiceEnabled = true;
+let currentSession = null;
 let recognition = null;
-let isListening = false;
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const $ = (id) => document.getElementById(id);
 
-/*
- * Remove decorative separator lines from the displayed reply.
- * Code blocks are preserved so programming examples are not damaged.
- */
-function cleanDisplayText(text) {
-  const lines = String(text || "").replace(/\r\n?/g, "\n").split("\n");
-  const output = [];
-  let insideCodeBlock = false;
-
-  for (const line of lines) {
-    if (/^\s*(```|~~~)/.test(line)) {
-      insideCodeBlock = !insideCodeBlock;
-      output.push(line);
-      continue;
-    }
-
-    if (!insideCodeBlock &&
-        /^\s*(?:={3,}|-{3,}|_{3,}|\*{3,}|#{3,}|~{3,})\s*$/.test(line)) {
-      continue;
-    }
-
-    output.push(line);
+function setStatus(text, good = true) {
+  $("systemStatus").textContent = "● " + text;
+  $("systemStatus").style.color = good ? "var(--green)" : "var(--red)";
+}
+function setAuthMessage(text, good = false) {
+  $("authMessage").textContent = text;
+  $("authMessage").className = "auth-message " + (good ? "good" : "bad");
+}
+function showSignedIn(session) {
+  currentSession = session;
+  const signedIn = !!session;
+  $("authPanel").classList.toggle("hidden", signedIn);
+  $("accountPanel").classList.toggle("hidden", !signedIn);
+  $("chatPanel").classList.toggle("hidden", !signedIn);
+  if (signedIn) {
+    $("accountEmail").textContent = session.user.email || "Signed in";
+    refreshUsage();
+    setStatus("SIGNED IN");
+  } else {
+    $("usageText").textContent = "Daily chats: sign in to view";
+    setStatus("READY");
   }
-
-  return output.join("\n").trim();
 }
-
-/*
- * Prepare natural speech separately from the on-screen reply.
- * Avoid reading code blocks and decorative Markdown characters aloud.
- */
-function prepareSpeechText(text) {
-  let result = String(text || "").replace(/\r\n?/g, "\n");
-
-  // Code is useful to read on screen, but usually unpleasant to hear.
-  result = result.replace(/```[\s\S]*?```/g, " Code example omitted from speech. ");
-  result = result.replace(/~~~[\s\S]*?~~~/g, " Code example omitted from speech. ");
-
-  // Remove separator-only lines.
-  result = result.replace(
-    /^\s*(?:={3,}|-{3,}|_{3,}|\*{3,}|#{3,}|~{3,})\s*$/gm,
-    ""
-  );
-
-  // Remove Markdown heading and quote markers at line beginnings.
-  result = result.replace(/^\s{0,3}#{1,6}\s+/gm, "");
-  result = result.replace(/^\s*>\s?/gm, "");
-
-  // Convert list markers into natural speech pauses.
-  result = result.replace(/^\s*[-+*]\s+/gm, "");
-  result = result.replace(/^\s*\d+[.)]\s+/gm, "");
-
-  // Keep the words while removing common Markdown wrappers.
-  result = result.replace(/\*\*(.*?)\*\*/gs, "$1");
-  result = result.replace(/__(.*?)__/gs, "$1");
-  result = result.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, "$1");
-  result = result.replace(/(?<!_)_([^_\n]+)_(?!_)/g, "$1");
-  result = result.replace(/`([^`\n]+)`/g, "$1");
-
-  // Remove repeated decorative equals signs without changing normal sentences.
-  result = result.replace(/={3,}/g, " ");
-
-  // Speak link labels, not long raw URLs.
-  result = result.replace(/\[([^\]]+)\]\(https?:\/\/[^)\s]+\)/g, "$1");
-  result = result.replace(/https?:\/\/\S+/g, " link ");
-
-  // Tidy up whitespace and punctuation spacing.
-  result = result.replace(/[ \t]{2,}/g, " ");
-  result = result.replace(/ *\n */g, ". ");
-  result = result.replace(/([.!?])(?:\s*[.!?])+/g, "$1");
-  result = result.replace(/\s+([,.;:!?])/g, "$1");
-  result = result.replace(/([,;:])(?=\S)/g, "$1 ");
-  result = result.replace(/\s+/g, " ").trim();
-
-  return result;
+async function loadConfig() {
+  try {
+    const response = await fetch("/config");
+    const config = await response.json();
+    if (!response.ok) throw new Error(config.error || "Server configuration unavailable.");
+    if (!config.supabaseUrl || !config.supabasePublishableKey) {
+      throw new Error("Supabase public configuration is missing on the server.");
+    }
+    if (!window.supabase || !window.supabase.createClient) {
+      throw new Error("Supabase library did not load. Check your internet connection and refresh.");
+    }
+    dailyLimit = Number(config.dailyChatLimit) || 100;
+    supabaseClient = window.supabase.createClient(
+      config.supabaseUrl,
+      config.supabasePublishableKey
+    );
+    const { data, error } = await supabaseClient.auth.getSession();
+    if (error) throw error;
+    showSignedIn(data.session);
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+      currentSession = session;
+      showSignedIn(session);
+    });
+    setStatus(currentSession ? "SIGNED IN" : "READY");
+  } catch (error) {
+    setStatus("CONFIG ERROR", false);
+    setAuthMessage("Could not initialize SINGAM: " + error.message +
+      "\nCheck the Render environment variables and deployment logs.");
+  }
 }
-
-function scrollToBottom() {
-  chat.scrollTop = chat.scrollHeight;
+async function signIn(event) {
+  event.preventDefault();
+  if (!supabaseClient) return setAuthMessage("Still connecting. Please wait and try again.");
+  const email = $("email").value.trim();
+  const password = $("password").value;
+  $("signInBtn").disabled = true;
+  $("signUpBtn").disabled = true;
+  setAuthMessage("Signing in...", true);
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    showSignedIn(data.session);
+    setAuthMessage("Signed in successfully.", true);
+  } catch (error) {
+    setAuthMessage(error.message || "Sign-in failed.");
+  } finally {
+    $("signInBtn").disabled = false;
+    $("signUpBtn").disabled = false;
+  }
 }
-
-function addMessage(role, text, imageURL = null) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "message " + role;
-
-  const label = document.createElement("div");
-  label.className = "message-label";
-  label.textContent = role === "user" ? "YOU" : "SINGAM";
-
+async function signUp() {
+  if (!supabaseClient) return setAuthMessage("Still connecting. Please wait and try again.");
+  const email = $("email").value.trim();
+  const password = $("password").value;
+  if (!email || password.length < 8) {
+    return setAuthMessage("Enter a valid email and a password with at least 8 characters.");
+  }
+  $("signInBtn").disabled = true;
+  $("signUpBtn").disabled = true;
+  setAuthMessage("Creating your account...", true);
+  try {
+    const { data, error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin }
+    });
+    if (error) throw error;
+    if (data.session) {
+      showSignedIn(data.session);
+      setAuthMessage("Account created. You're signed in.", true);
+    } else {
+      setAuthMessage("Account request successful. Check your email to confirm your account, then return here and sign in.", true);
+    }
+  } catch (error) {
+    setAuthMessage(error.message || "Account creation failed.");
+  } finally {
+    $("signInBtn").disabled = false;
+    $("signUpBtn").disabled = false;
+  }
+}
+async function signOut() {
+  if (!supabaseClient) return;
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) setAuthMessage(error.message);
+  else {
+    currentSession = null;
+    showSignedIn(null);
+    setAuthMessage("Signed out successfully.", true);
+  }
+}
+async function getToken() {
+  if (!supabaseClient) throw new Error("SINGAM is still connecting.");
+  const { data, error } = await supabaseClient.auth.getSession();
+  if (error) throw error;
+  if (!data.session) {
+    showSignedIn(null);
+    throw new Error("Your session has expired. Please sign in again.");
+  }
+  currentSession = data.session;
+  return data.session.access_token;
+}
+async function refreshUsage() {
+  if (!currentSession) return;
+  try {
+    const token = await getToken();
+    const response = await fetch("/usage", {
+      headers: { "Authorization": "Bearer " + token }
+    });
+    const data = await response.json();
+    if (response.status === 401) {
+      await supabaseClient.auth.signOut();
+      throw new Error("Session expired. Please sign in again.");
+    }
+    if (!response.ok) throw new Error(data.error || "Could not load usage.");
+    const count = Number(data.chat_count ?? data.chatCount ?? 0);
+    const limit = Number(data.daily_limit ?? data.dailyLimit ?? dailyLimit);
+    $("usageText").textContent = "Daily chats: " + count + " / " + limit + " · Remaining: " + Math.max(0, limit - count);
+    $("usageDate").textContent = "Date: " + (data.usage_date || data.usageDate || "IST");
+  } catch (error) {
+    $("usageText").textContent = "Usage unavailable";
+    $("usageDate").textContent = error.message;
+  }
+}
+function addMessage(text, who = "bot", imageUrl = null) {
+  const box = $("chatBox");
   const bubble = document.createElement("div");
-  bubble.className = "bubble";
-
-  // Use textContent for safety; AI responses are not treated as HTML.
-  bubble.textContent = role === "ai" ? cleanDisplayText(text) : text;
-
-  if (imageURL) {
+  bubble.className = "msg " + who;
+  if (imageUrl) {
     const img = document.createElement("img");
-    img.src = imageURL;
-    img.alt = "Uploaded image";
-    bubble.appendChild(document.createElement("br"));
+    img.src = imageUrl;
+    img.alt = "Uploaded attachment preview";
     bubble.appendChild(img);
   }
-
-  wrapper.appendChild(label);
-  wrapper.appendChild(bubble);
-  chat.appendChild(wrapper);
-  scrollToBottom();
-
-  return wrapper;
+  const content = document.createElement("div");
+  content.textContent = text;
+  bubble.appendChild(content);
+  box.appendChild(bubble);
+  box.scrollTop = box.scrollHeight;
+  return bubble;
 }
-
-function addDownloadButton(messageElement, pdfData) {
-  if (!pdfData ||
-      typeof pdfData.data !== "string" ||
-      !pdfData.data.length) {
-    return;
-  }
-
-  const button = document.createElement("button");
-  button.className = "download-pdf-btn";
-  button.type = "button";
-  button.textContent = "⬇ Download PDF";
-
-  button.addEventListener("click", () => {
-    try {
-      const binary = atob(pdfData.data);
-      const bytes = new Uint8Array(binary.length);
-
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-
-      const blob = new Blob([bytes], {
-        type: pdfData.mimeType || "application/pdf"
-      });
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-
-      let filename = pdfData.filename || "singam-report.pdf";
-      filename = filename.replace(/[\\/:*?"<>|]/g, "_");
-
-      link.href = url;
-      link.download = filename.toLowerCase().endsWith(".pdf")
-        ? filename
-        : filename + ".pdf";
-
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      setTimeout(() => URL.revokeObjectURL(url), 3000);
-    } catch (error) {
-      console.error("PDF download error:", error);
-      alert("Could not download the PDF. Please try again.");
-    }
-  });
-
-  messageElement.appendChild(button);
-  scrollToBottom();
-}
-
-/* Natural spoken output */
-function speakText(text) {
+function speak(text) {
   if (!voiceEnabled || !("speechSynthesis" in window)) return;
-
-  const speechText = prepareSpeechText(text);
-  if (!speechText) return;
-
   window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(speechText);
+  const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   utterance.rate = 0.9;
-  utterance.pitch = 1;
+  utterance.pitch = 0.75;
   utterance.volume = 1;
-
-  utterance.onerror = (event) => {
-    console.warn("Speech output error:", event.error);
-  };
-
+  const voices = window.speechSynthesis.getVoices();
+  const voice = voices.find(v => v.lang === "en-US") ||
+                voices.find(v => v.lang.startsWith("en-"));
+  if (voice) utterance.voice = voice;
   window.speechSynthesis.speak(utterance);
 }
-
-/* Microphone input */
-const SpeechRecognitionAPI =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
-
-if (SpeechRecognitionAPI) {
-  recognition = new SpeechRecognitionAPI();
-  recognition.lang = "en-US";
-  recognition.continuous = false;
-  recognition.interimResults = true;
-
-  recognition.onstart = () => {
-    isListening = true;
-    micBtn.textContent = "🔴 Listening...";
-  };
-
-  recognition.onresult = (event) => {
-    let transcript = "";
-
-    for (let i = 0; i < event.results.length; i++) {
-      transcript += event.results[i][0].transcript;
-    }
-
-    messageInput.value = transcript;
-  };
-
-  recognition.onend = () => {
-    isListening = false;
-    micBtn.textContent = "🎤 Speak";
-  };
-
-  recognition.onerror = (event) => {
-    isListening = false;
-    micBtn.textContent = "🎤 Speak";
-
-    if (event.error === "not-allowed" ||
-        event.error === "service-not-allowed") {
-      alert("Microphone access is blocked. Allow microphone permission in your browser settings.");
-    } else if (event.error === "no-speech") {
-      alert("No speech detected. Please tap Speak and try again.");
-    } else if (event.error !== "aborted") {
-      console.warn("Microphone error:", event.error);
-    }
-  };
-} else {
-  micBtn.title = "Speech recognition is not supported by this browser.";
-}
-
-micBtn.addEventListener("click", () => {
-  if (busy) return;
-
-  if (!recognition) {
-    alert("Voice input is not supported in this browser. Please try an updated Chrome browser.");
-    return;
-  }
-
-  if (isListening) {
-    recognition.stop();
-    return;
-  }
-
-  try {
-    recognition.start();
-  } catch (error) {
-    console.error("Could not start microphone:", error);
-    alert("Could not start the microphone. Please try again.");
-  }
-});
-
-function clearSelectedFile() {
-  selectedFile = null;
-  fileInput.value = "";
-
-  if (selectedImageURL) {
-    URL.revokeObjectURL(selectedImageURL);
-    selectedImageURL = null;
-  }
-
-  imagePreview.removeAttribute("src");
-  imagePreview.hidden = true;
-  fileName.textContent = "";
-  fileInfo.style.display = "none";
-}
-
-uploadBtn.addEventListener("click", () => {
-  if (!busy) fileInput.click();
-});
-
-fileInput.addEventListener("change", () => {
-  const file = fileInput.files && fileInput.files[0];
-  if (!file) return;
-
-  if (file.size > MAX_FILE_SIZE) {
-    alert("The file is larger than 5 MB. Please choose a smaller file.");
-    clearSelectedFile();
-    return;
-  }
-
-  const isPDF =
-    file.type === "application/pdf" ||
-    file.name.toLowerCase().endsWith(".pdf");
-
-  const isImage = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/gif"
-  ].includes(file.type);
-
-  if (!isPDF && !isImage) {
-    alert("Please select a JPG, PNG, WEBP, GIF, or PDF file.");
-    clearSelectedFile();
-    return;
-  }
-
-  clearSelectedFile();
-  selectedFile = file;
-  fileName.textContent = file.name;
-  fileInfo.style.display = "flex";
-
-  if (isImage) {
-    selectedImageURL = URL.createObjectURL(file);
-    imagePreview.src = selectedImageURL;
-    imagePreview.hidden = false;
-  }
-});
-
-removeFileBtn.addEventListener("click", clearSelectedFile);
-
-voiceBtn.addEventListener("click", () => {
-  voiceEnabled = !voiceEnabled;
-  voiceBtn.textContent = voiceEnabled
-    ? "🔊 Voice: On"
-    : "🔇 Voice: Off";
-
-  if (!voiceEnabled && "speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-  } else if (voiceEnabled) {
-    speakText("Hello boss. SINGAM voice system is ready.");
-  }
-});
-
-document.querySelectorAll(".suggestion").forEach(button => {
-  button.addEventListener("click", () => {
-    if (busy) return;
-    messageInput.value = button.dataset.prompt || "";
-    messageInput.focus();
-  });
-});
-
-messageInput.addEventListener("keydown", event => {
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault();
-    sendCommand();
-  }
-});
-
-sendBtn.addEventListener("click", sendCommand);
-
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-
     reader.onload = () => {
-      const result = reader.result;
-
-      if (typeof result !== "string" || !result.includes(",")) {
-        reject(new Error("Could not read the selected file."));
-        return;
-      }
-
-      resolve(result.split(",")[1]);
+      const result = String(reader.result || "");
+      resolve(result.includes(",") ? result.split(",")[1] : result);
     };
-
-    reader.onerror = () => reject(new Error("Failed to read the file."));
+    reader.onerror = () => reject(new Error("Could not read the selected file."));
     reader.readAsDataURL(file);
   });
 }
-
-async function sendCommand() {
-  if (busy) return;
-
-  const command = messageInput.value.trim();
-
-  if (!command && !selectedFile) {
-    messageInput.focus();
+$("fileInput").addEventListener("change", () => {
+  const file = $("fileInput").files[0];
+  selectedFile = file || null;
+  if (!file) {
+    $("attachmentPreview").textContent = "No attachment";
     return;
   }
-
-  const attachedFile = selectedFile;
-  const attachedImageURL =
-    attachedFile && attachedFile.type.startsWith("image/")
-      ? selectedImageURL
-      : null;
-
-  addMessage(
-    "user",
-    command || (attachedFile
-      ? "Please analyze this file: " + attachedFile.name
-      : ""),
-    attachedImageURL
-  );
-
-  messageInput.value = "";
+  if (file.size > 5 * 1024 * 1024) {
+    selectedFile = null;
+    $("fileInput").value = "";
+    $("attachmentPreview").textContent = "File exceeds 5 MB";
+    return;
+  }
+  const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
+  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+  if (!allowed.includes(file.type) && !isPdf) {
+    selectedFile = null;
+    $("fileInput").value = "";
+    $("attachmentPreview").textContent = "Unsupported file type";
+    return;
+  }
+  $("attachmentPreview").textContent = file.name + " (" + (file.size / 1024).toFixed(0) + " KB)";
+});
+$("clearFileBtn").addEventListener("click", () => {
+  selectedFile = null;
+  $("fileInput").value = "";
+  $("attachmentPreview").textContent = "No attachment";
+});
+async function sendMessage(forcedPrompt = null) {
+  if (busy) return;
+  const message = (forcedPrompt ?? $("messageInput").value).trim();
+  if (!message && !selectedFile) return;
   busy = true;
-  sendBtn.disabled = true;
-  uploadBtn.disabled = true;
-  micBtn.disabled = true;
-  sendBtn.textContent = "WORKING...";
-
-  const waitingMessage = addMessage("ai", "Working on your request...");
-
+  $("sendBtn").disabled = true;
+  let waitingBubble = null;
   try {
-    const payload = { command };
-
-    if (attachedFile) {
-      const base64 = await fileToBase64(attachedFile);
-
-      if (
-        attachedFile.type === "application/pdf" ||
-        attachedFile.name.toLowerCase().endsWith(".pdf")
-      ) {
-        payload.pdf = {
-          data: base64,
-          mimeType: "application/pdf",
-          filename: attachedFile.name
-        };
+    const token = await getToken();
+    let body = { command: message };
+    let previewUrl = null;
+    if (selectedFile) {
+      const file = selectedFile;
+      const base64 = await fileToBase64(file);
+      const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+      if (isPdf) {
+        body.pdfBase64 = base64;
+        body.pdfName = file.name;
       } else {
-        payload.image = {
-          data: base64,
-          mimeType: attachedFile.type
-        };
+        body.imageData = base64;
+        body.imageMimeType = file.type;
+        previewUrl = URL.createObjectURL(file);
       }
     }
-
+    addMessage(message || (selectedFile ? "Please analyze this attachment." : ""), "user", previewUrl);
+    if (previewUrl) setTimeout(() => URL.revokeObjectURL(previewUrl), 60000);
+    $("messageInput").value = "";
+    waitingBubble = addMessage("SINGAM is thinking...", "bot");
     const response = await fetch("/ask", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(body)
     });
-
-    let data;
-
-    try {
-      data = await response.json();
-    } catch {
-      throw new Error("The server returned an invalid response.");
+    const data = await response.json();
+    waitingBubble.remove();
+    if (response.status === 401) {
+      await supabaseClient.auth.signOut();
+      throw new Error(data.error || "Session expired. Please sign in again.");
     }
-
+    if (response.status === 429) {
+      addMessage(data.error || data.reply || "Daily chat limit reached. Try again tomorrow.", "bot");
+      await refreshUsage();
+      return;
+    }
     if (!response.ok) {
-      throw new Error(
-        data.reply || data.error ||
-        "The request failed with status " + response.status + "."
-      );
+      throw new Error(data.error || data.reply || ("Request failed (" + response.status + ")"));
     }
-
-    waitingMessage.remove();
-
-    const reply =
-      typeof data.reply === "string" && data.reply.trim()
-        ? data.reply
-        : "The server returned no reply. Please try again.";
-
-    const cleanReply = cleanDisplayText(reply);
-    const aiMessage = addMessage("ai", cleanReply);
-
-    if (data.pdf) {
-      addDownloadButton(aiMessage, data.pdf);
+    addMessage(data.reply || "No response received.", "bot");
+    if (data.usage) {
+      const count = Number(data.usage.chat_count ?? data.usage.chatCount);
+      const limit = Number(data.usage.daily_limit ?? data.usage.dailyLimit ?? dailyLimit);
+      if (Number.isFinite(count)) {
+        $("usageText").textContent = "Daily chats: " + count + " / " + limit + " · Remaining: " + Math.max(0, limit - count);
+        $("usageDate").textContent = "Date: " + (data.usage.usage_date || data.usage.usageDate || "IST");
+      }
+    } else {
+      await refreshUsage();
     }
-
-    speakText(cleanReply);
-
-    if (attachedFile) {
-      clearSelectedFile();
+    if (data.pdf && data.pdf.data) {
+      const raw = atob(data.pdf.data);
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      const blob = new Blob([bytes], { type: data.pdf.mimeType || "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = data.pdf.filename || "singam-document.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      addMessage("PDF generated and downloaded: " + link.download, "bot");
     }
+    speak(data.reply || "");
+    selectedFile = null;
+    $("fileInput").value = "";
+    $("attachmentPreview").textContent = "No attachment";
   } catch (error) {
-    waitingMessage.remove();
-
-    const errorMessage =
-      error && error.message
-        ? error.message
-        : "Something went wrong. Please try again.";
-
-    addMessage("ai", "Error: " + errorMessage);
-    console.error("SINGAM request failed:", error);
+    if (waitingBubble && waitingBubble.isConnected) waitingBubble.remove();
+    addMessage("Error: " + (error.message || "Something went wrong."), "bot");
   } finally {
     busy = false;
-    sendBtn.disabled = false;
-    uploadBtn.disabled = false;
-    micBtn.disabled = false;
-    sendBtn.textContent = "SEND ➤";
-    messageInput.focus();
+    $("sendBtn").disabled = false;
+    $("messageInput").focus();
   }
 }
+$("authForm").addEventListener("submit", signIn);
+$("signUpBtn").addEventListener("click", signUp);
+$("signOutBtn").addEventListener("click", signOut);
+$("sendBtn").addEventListener("click", () => sendMessage());
+$("messageInput").addEventListener("keydown", event => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+});
+document.querySelectorAll(".suggestion").forEach(button => {
+  button.addEventListener("click", () => sendMessage(button.dataset.prompt));
+});
+$("voiceToggleBtn").addEventListener("click", () => {
+  voiceEnabled = !voiceEnabled;
+  $("voiceToggleBtn").textContent = voiceEnabled ? "🔊 Voice: ON" : "🔇 Voice: OFF";
+  if (!voiceEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
+});
+$("stopVoiceBtn").addEventListener("click", () => {
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+});
+$("voiceInputBtn").addEventListener("click", () => {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    addMessage("Voice input is not supported by this browser. Try Chrome and allow microphone access.", "bot");
+    return;
+  }
+  if (recognition) {
+    recognition.stop();
+    recognition = null;
+    $("voiceInputBtn").textContent = "🎙 Voice Input";
+    return;
+  }
+  recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  recognition.onstart = () => $("voiceInputBtn").textContent = "⏹ Stop Listening";
+  recognition.onresult = event => {
+    $("messageInput").value = event.results[0][0].transcript;
+    $("messageInput").focus();
+  };
+  recognition.onerror = event => addMessage("Voice input error: " + event.error, "bot");
+  recognition.onend = () => {
+    recognition = null;
+    $("voiceInputBtn").textContent = "🎙 Voice Input";
+  };
+  try { recognition.start(); }
+  catch (error) {
+    recognition = null;
+    addMessage("Could not start microphone: " + error.message, "bot");
+  }
+});
+loadConfig();
 </script>
 </body>
 </html>

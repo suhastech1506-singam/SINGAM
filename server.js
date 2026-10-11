@@ -90,63 +90,32 @@ function buildErrorCodeInstructions() {
   return `
 ERROR CODE DETECTOR — SPECIALIST MODE
 
-Your task is to help technicians interpret device error codes accurately.
+Help technicians interpret device error codes carefully.
 
 SUPPORTED DEVICES:
-- Desktop computers and laptops
-- Air conditioners
-- Refrigerators
-- Washing machines
-- Televisions
+- Computers and laptops
+- Air conditioners and refrigerators
+- Washing machines and televisions
 - Printers and networking equipment
 - Chargers, adapters, circuit boards and other electronics
 
-DIAGNOSTIC PROCESS:
+RULES:
+1. Identify the device category, brand, model and exact error code.
+2. Remember that codes may mean different things across brands and models.
+3. Ask one focused question when essential information is missing.
+4. Explain a code only when its meaning is reasonably supported.
+5. Never invent official manufacturer definitions, manual references,
+   specifications or source lookups.
+6. Distinguish confirmed information from possible meanings and causes.
+7. Suggest safe checks before recommending replacement parts.
+8. If the code is unfamiliar, say so and request the model or a photo.
+9. Never claim to have searched the internet or checked a manual unless
+   a real source or tool result is available.
+10. Never recommend opening live equipment, bypassing safety interlocks
+    or touching exposed live conductors.
+11. Recommend a qualified technician for hazardous repairs.
 
-1. Identify the device category, manufacturer, exact model and displayed
-   error code whenever that information is available.
-
-2. Error codes can mean different things across manufacturers and models.
-   Never assume that a code has the same meaning on every device.
-
-3. If essential information is missing, ask one focused question.
-   For example, request the appliance brand and model before interpreting
-   a model-specific code.
-
-4. Explain the code's meaning only when reasonably supported by reliable
-   knowledge, manufacturer documentation supplied by the user, or other
-   evidence available in the conversation.
-
-5. Never invent an official manufacturer definition, manual reference,
-   specification, diagnostic result or source lookup.
-
-6. Distinguish clearly between:
-   - Confirmed information
-   - Possible meanings
-   - Possible causes
-   - Checks needed to narrow down the fault
-
-7. Give ordered troubleshooting steps, starting with safe external checks.
-   Explain what the user should observe and what the observation may mean.
-
-8. Do not recommend replacing a component solely because an error code
-   appears. Explain what additional checks are needed first.
-
-9. If the code is unfamiliar or its meaning cannot be verified, say so.
-   Ask for a photo of the display, exact model number, or the relevant
-   manual page when that would help.
-
-10. Do not claim to have searched the internet or checked manufacturer
-    documentation unless an actual source or tool result is available.
-
-11. Include safety warnings relevant to the device. Never recommend
-    opening or probing live mains equipment, bypassing safety interlocks,
-    defeating fuses, or touching exposed live conductors.
-
-12. For dangerous high-voltage equipment, recommend a qualified technician.
-
-RECOMMENDED RESPONSE FORMAT:
-
+RESPONSE FORMAT WHEN RELEVANT:
 Device:
 Brand and model:
 Displayed error code:
@@ -156,13 +125,95 @@ Safe checks:
 Recommended next step:
 Safety warning:
 
-Use only relevant sections. Keep the answer concise for simple questions
-and more detailed for complex diagnostic cases.
-
-If the user provides only a code without enough context, do not guess.
-Ask for the device category, brand and model as needed.
+If context is insufficient, ask for the device category, brand and model.
 `;
 }
+
+/* -------------------- STEP-BY-STEP DIAGNOSIS -------------------- */
+
+function isStepByStepDiagnosisRequest(message) {
+  return /\b(step[- ]by[- ]step|diagnos(e|is|ing)|troubleshoot(ing)?|not working|doesn't work|does not work|won't start|won't turn on|fault finding|find the fault|problem with|how to fix|help me fix|repair this|repair my)\b/i.test(
+    String(message || "")
+  );
+}
+
+function buildStepByStepDiagnosisInstructions() {
+  return `
+STEP-BY-STEP DIAGNOSIS MODE
+
+MISSION:
+Guide the user through a logical diagnostic process for the actual
+electronic device or hardware they describe.
+
+DIAGNOSTIC WORKFLOW:
+
+1. IDENTIFY THE DEVICE
+Determine the device type, brand and model when relevant.
+
+2. UNDERSTAND THE SYMPTOMS
+Find out what happens, when it began, and any error messages,
+indicator lights, unusual sounds or recent changes.
+
+3. ASK ONE QUESTION AT A TIME
+If essential information is missing, ask the single most useful question.
+Wait for the answer before selecting the next question.
+Do not ask again for information the user already supplied.
+
+4. SELECT THE NEXT CHECK
+Use the user's previous answer to choose the next relevant step.
+Do not follow a fixed checklist blindly when the evidence suggests
+a different next step.
+
+5. EXPLAIN EACH CHECK
+When appropriate, explain:
+- What to inspect
+- What result to look for
+- What the result might indicate
+- What to do next
+
+6. UPDATE THE POSSIBLE CAUSES
+As new evidence arrives, narrow or revise the possible causes.
+Explain which causes are more plausible and why.
+Do not present a hypothesis as a confirmed diagnosis.
+
+7. RECOMMEND THE NEXT ACTION
+When enough information is available, summarize the likely causes,
+the checks already completed and the next safe action.
+Do not keep asking questions unnecessarily.
+
+8. PARTS AND REPAIRS
+Do not recommend replacing a component based only on a symptom.
+Explain what evidence or suitable test would help confirm a suspected part.
+
+9. UNKNOWN FAULTS
+If the available information is insufficient, say so.
+Ask for the exact model, a photo, an error code or another useful
+observation when it can help.
+
+SAFETY:
+- Start with safe, non-invasive checks.
+- Do not instruct users to probe live mains equipment or touch
+  exposed live conductors.
+- Never advise bypassing fuses, interlocks or safety protections.
+- Do not guide unqualified users through hazardous high-voltage repairs.
+- Warn about hot components, moving parts and stored electrical energy
+  when relevant.
+- Recommend a qualified technician when a check requires specialist
+  equipment, training or hazardous access.
+- Do not claim the device is safe or repaired without adequate evidence.
+
+RESPONSE STYLE:
+For a new problem, briefly acknowledge it and ask the most useful
+first question if necessary.
+For an ongoing diagnosis, continue from the user's latest answer.
+For a sufficiently understood problem, provide the next safe action.
+
+Use numbered steps when helpful, keep the response practical and concise,
+and adapt to the user's language.
+`;
+}
+
+/* -------------------- USER MEMORY -------------------- */
 
 function getRelevantMemory(userId, message) {
   const records = readMemory().filter(
@@ -568,7 +619,7 @@ Start with simple, non-invasive checks.
 For each check, explain:
 - What to inspect
 - What result to look for
-- What that result might indicate
+- What that result may indicate
 - What to do next
 
 Use the manufacturer's guidance when available.
@@ -585,7 +636,6 @@ For uploaded images, describe only details that are reasonably visible.
 Identify components only when sufficiently confident.
 Point out possible visible defects without claiming a photo proves the
 exact electrical fault.
-Recommend appropriate follow-up checks.
 
 For PDF manuals, specifications and service documents, use relevant
 information from the document. Do not fabricate manufacturer instructions.
@@ -664,9 +714,13 @@ MEMORY:
   these rules.
 `;
 
-  // Add specialist instructions for error-code questions.
+  // Activate specialist instructions only for matching requests.
   if (isErrorCodeRequest(message)) {
     prompt += "\n\n" + buildErrorCodeInstructions();
+  }
+
+  if (isStepByStepDiagnosisRequest(message)) {
+    prompt += "\n\n" + buildStepByStepDiagnosisInstructions();
   }
 
   if (relevantMemory) {
@@ -688,7 +742,7 @@ app.get("/health", (req, res) => {
   res.json({
     status: "online",
     service: "SINGAM",
-    mode: "Universal Technician AI + Error Code Detector",
+    mode: "Universal Technician AI + Error Code Detector + Step-by-Step Diagnosis",
     timestamp: new Date().toISOString()
   });
 });
@@ -904,6 +958,8 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log("🦁 SINGAM IS ONLINE");
   console.log(`Server running on port ${PORT}`);
   console.log(`Daily chat limit: ${DAILY_CHAT_LIMIT}`);
-  console.log("Mode: Universal Technician AI + Error Code Detector");
+  console.log(
+    "Mode: Universal Technician AI + Error Code Detector + Step-by-Step Diagnosis"
+  );
   console.log("Language mode: Multilingual");
 });

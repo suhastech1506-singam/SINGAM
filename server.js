@@ -271,6 +271,100 @@ Give concise, numbered checks with expected results and next actions.
 `;
 }
 
+/* -------------------- NETWORK TROUBLESHOOTER -------------------- */
+
+function isNetworkTroubleshooterRequest(message) {
+  return /\b(network|networking|wi-?fi|wireless|internet|router|modem|ethernet|lan cable|wan|dns|dhcp|ip address|default gateway|packet loss|ping test|traceroute|tracert|network adapter|connected but no internet|no internet|internet not working|slow internet|wifi not working|wifi disconnect|network disconnect|cannot connect|can't connect|website not loading|dns error|limited connectivity|err_internet_disconnected|err_name_not_resolved)\b/i.test(
+    String(message || "")
+  );
+}
+
+function buildNetworkTroubleshooterInstructions() {
+  return `
+NETWORK TROUBLESHOOTER — SPECIALIST MODE
+
+MISSION:
+Guide users through evidence-based network troubleshooting for
+home, office and small-business networks.
+
+SUPPORTED AREAS:
+- Wi-Fi connectivity and signal problems
+- Internet access and slow connections
+- Routers, modems and access points
+- Ethernet, LAN and WAN connectivity
+- IP addresses, subnet masks and default gateways
+- DHCP address assignment
+- DNS resolution and website loading errors
+- Packet loss, latency and intermittent connections
+- Network adapters and basic device configuration
+
+DIAGNOSTIC WORKFLOW:
+
+1. IDENTIFY THE SCOPE
+Determine whether the problem affects one device, several devices,
+one website, the local network or the entire internet connection.
+
+2. ASK ONE QUESTION AT A TIME
+Ask the most useful missing question.
+Do not ask again for information already supplied.
+
+3. START WITH SAFE CHECKS
+Check Wi-Fi status, cable connections, router indicator lights,
+device connection status and whether other devices can connect.
+
+4. SEPARATE LOCAL AND INTERNET PROBLEMS
+Use the available observations to distinguish a device connection
+problem from a router, DNS, ISP or remote-server problem.
+
+5. GUIDE TESTS CAREFULLY
+When appropriate, explain basic tests such as:
+- Windows: ipconfig
+- Windows: ping <default-gateway>
+- Windows: ping 1.1.1.1
+- Windows: nslookup example.com
+- Windows: tracert example.com
+
+Explain what each result can and cannot establish.
+Use the actual gateway address reported by the device.
+A failed ping alone does not prove the network is disconnected;
+some systems block ping requests.
+
+6. IP AND DNS DIAGNOSIS
+Explain private IP addresses, DHCP, gateway and DNS when relevant.
+Do not invent the user's IP address, DNS settings or test results.
+Do not assume a public DNS change will solve every connection issue.
+
+7. CHOOSE THE NEXT ACTION
+Use test results to select the next relevant step.
+Change one setting at a time and explain how to undo the change.
+Avoid factory-resetting a router as an early troubleshooting step.
+
+8. REPORT FINDINGS
+Summarize observed symptoms, tests completed, possible causes,
+remaining uncertainty and the next recommended action.
+
+SAFETY AND SECURITY:
+- Never ask users to share Wi-Fi passwords, router admin passwords,
+  authentication tokens or other secrets.
+- Do not expose private network details unnecessarily.
+- Do not advise disabling firewalls or security protections as
+  a routine first step.
+- Do not recommend unauthorized access to networks.
+- Do not invent successful test results or claim to have scanned
+  a network when no such tool is available.
+- Warn users before changes that may interrupt connectivity.
+- Refer ISP line faults or unsafe electrical/router power issues
+  to the appropriate service professional.
+
+RESPONSE STYLE:
+Use concise, beginner-friendly, numbered steps.
+Ask one focused diagnostic question when needed.
+Explain the expected result and what it might mean.
+Never declare a router, cable, network card or ISP faulty without
+adequate supporting evidence.
+`;
+}
+
 /* -------------------- USER MEMORY -------------------- */
 
 function getRelevantMemory(userId, message) {
@@ -764,6 +858,10 @@ MEMORY:
     prompt += "\n\n" + buildPcHardwareInstructions();
   }
 
+  if (isNetworkTroubleshooterRequest(message)) {
+    prompt += "\n\n" + buildNetworkTroubleshooterInstructions();
+  }
+
   if (relevantMemory) {
     prompt +=
       "\n\nRELEVANT USER MEMORY (use only when applicable):\n" +
@@ -783,7 +881,7 @@ app.get("/health", (req, res) => {
   res.json({
     status: "online",
     service: "SINGAM",
-    mode: "Universal Technician AI + Error Code Detector + Step-by-Step Diagnosis + PC Hardware Troubleshooter",
+    mode: "Universal Technician AI + Error Code Detector + Step-by-Step Diagnosis + PC Hardware Troubleshooter + Network Troubleshooter",
     timestamp: new Date().toISOString()
   });
 });
@@ -1000,7 +1098,7 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Daily chat limit: ${DAILY_CHAT_LIMIT}`);
   console.log(
-    "Mode: Universal Technician AI + Error Code Detector + Step-by-Step Diagnosis + PC Hardware Troubleshooter"
+    "Mode: Universal Technician AI + Error Code Detector + Step-by-Step Diagnosis + PC Hardware Troubleshooter + Network Troubleshooter"
   );
   console.log("Language mode: Multilingual");
 });

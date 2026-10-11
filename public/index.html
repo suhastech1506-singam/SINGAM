@@ -363,6 +363,8 @@ footer {
 </div>
 
 <script>
+"use strict";
+
 const chat = document.getElementById("chat");
 const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
@@ -384,6 +386,83 @@ let isListening = false;
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
+/*
+ * Remove decorative separator lines from the displayed reply.
+ * Code blocks are preserved so programming examples are not damaged.
+ */
+function cleanDisplayText(text) {
+  const lines = String(text || "").replace(/\r\n?/g, "\n").split("\n");
+  const output = [];
+  let insideCodeBlock = false;
+
+  for (const line of lines) {
+    if (/^\s*(```|~~~)/.test(line)) {
+      insideCodeBlock = !insideCodeBlock;
+      output.push(line);
+      continue;
+    }
+
+    if (!insideCodeBlock &&
+        /^\s*(?:={3,}|-{3,}|_{3,}|\*{3,}|#{3,}|~{3,})\s*$/.test(line)) {
+      continue;
+    }
+
+    output.push(line);
+  }
+
+  return output.join("\n").trim();
+}
+
+/*
+ * Prepare natural speech separately from the on-screen reply.
+ * Avoid reading code blocks and decorative Markdown characters aloud.
+ */
+function prepareSpeechText(text) {
+  let result = String(text || "").replace(/\r\n?/g, "\n");
+
+  // Code is useful to read on screen, but usually unpleasant to hear.
+  result = result.replace(/```[\s\S]*?```/g, " Code example omitted from speech. ");
+  result = result.replace(/~~~[\s\S]*?~~~/g, " Code example omitted from speech. ");
+
+  // Remove separator-only lines.
+  result = result.replace(
+    /^\s*(?:={3,}|-{3,}|_{3,}|\*{3,}|#{3,}|~{3,})\s*$/gm,
+    ""
+  );
+
+  // Remove Markdown heading and quote markers at line beginnings.
+  result = result.replace(/^\s{0,3}#{1,6}\s+/gm, "");
+  result = result.replace(/^\s*>\s?/gm, "");
+
+  // Convert list markers into natural speech pauses.
+  result = result.replace(/^\s*[-+*]\s+/gm, "");
+  result = result.replace(/^\s*\d+[.)]\s+/gm, "");
+
+  // Keep the words while removing common Markdown wrappers.
+  result = result.replace(/\*\*(.*?)\*\*/gs, "$1");
+  result = result.replace(/__(.*?)__/gs, "$1");
+  result = result.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, "$1");
+  result = result.replace(/(?<!_)_([^_\n]+)_(?!_)/g, "$1");
+  result = result.replace(/`([^`\n]+)`/g, "$1");
+
+  // Remove repeated decorative equals signs without changing normal sentences.
+  result = result.replace(/={3,}/g, " ");
+
+  // Speak link labels, not long raw URLs.
+  result = result.replace(/\[([^\]]+)\]\(https?:\/\/[^)\s]+\)/g, "$1");
+  result = result.replace(/https?:\/\/\S+/g, " link ");
+
+  // Tidy up whitespace and punctuation spacing.
+  result = result.replace(/[ \t]{2,}/g, " ");
+  result = result.replace(/ *\n */g, ". ");
+  result = result.replace(/([.!?])(?:\s*[.!?])+/g, "$1");
+  result = result.replace(/\s+([,.;:!?])/g, "$1");
+  result = result.replace(/([,;:])(?=\S)/g, "$1 ");
+  result = result.replace(/\s+/g, " ").trim();
+
+  return result;
+}
+
 function scrollToBottom() {
   chat.scrollTop = chat.scrollHeight;
 }
@@ -398,7 +477,9 @@ function addMessage(role, text, imageURL = null) {
 
   const bubble = document.createElement("div");
   bubble.className = "bubble";
-  bubble.textContent = text;
+
+  // Use textContent for safety; AI responses are not treated as HTML.
+  bubble.textContent = role === "ai" ? cleanDisplayText(text) : text;
 
   if (imageURL) {
     const img = document.createElement("img");
@@ -417,7 +498,9 @@ function addMessage(role, text, imageURL = null) {
 }
 
 function addDownloadButton(messageElement, pdfData) {
-  if (!pdfData || typeof pdfData.data !== "string" || !pdfData.data.length) {
+  if (!pdfData ||
+      typeof pdfData.data !== "string" ||
+      !pdfData.data.length) {
     return;
   }
 
@@ -465,16 +548,16 @@ function addDownloadButton(messageElement, pdfData) {
   scrollToBottom();
 }
 
-/* Spoken output */
+/* Natural spoken output */
 function speakText(text) {
   if (!voiceEnabled || !("speechSynthesis" in window)) return;
 
+  const speechText = prepareSpeechText(text);
+  if (!speechText) return;
+
   window.speechSynthesis.cancel();
 
-  const cleanText = String(text || "").trim();
-  if (!cleanText) return;
-
-  const utterance = new SpeechSynthesisUtterance(cleanText);
+  const utterance = new SpeechSynthesisUtterance(speechText);
   utterance.lang = "en-US";
   utterance.rate = 0.9;
   utterance.pitch = 1;
@@ -521,11 +604,12 @@ if (SpeechRecognitionAPI) {
     isListening = false;
     micBtn.textContent = "🎤 Speak";
 
-    if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+    if (event.error === "not-allowed" ||
+        event.error === "service-not-allowed") {
       alert("Microphone access is blocked. Allow microphone permission in your browser settings.");
     } else if (event.error === "no-speech") {
       alert("No speech detected. Please tap Speak and try again.");
-    } else {
+    } else if (event.error !== "aborted") {
       console.warn("Microphone error:", event.error);
     }
   };
@@ -616,7 +700,9 @@ removeFileBtn.addEventListener("click", clearSelectedFile);
 
 voiceBtn.addEventListener("click", () => {
   voiceEnabled = !voiceEnabled;
-  voiceBtn.textContent = voiceEnabled ? "🔊 Voice: On" : "🔇 Voice: Off";
+  voiceBtn.textContent = voiceEnabled
+    ? "🔊 Voice: On"
+    : "🔇 Voice: Off";
 
   if (!voiceEnabled && "speechSynthesis" in window) {
     window.speechSynthesis.cancel();
@@ -680,7 +766,9 @@ async function sendCommand() {
 
   addMessage(
     "user",
-    command || (attachedFile ? "Please analyze this file: " + attachedFile.name : ""),
+    command || (attachedFile
+      ? "Please analyze this file: " + attachedFile.name
+      : ""),
     attachedImageURL
   );
 
@@ -746,13 +834,14 @@ async function sendCommand() {
         ? data.reply
         : "The server returned no reply. Please try again.";
 
-    const aiMessage = addMessage("ai", reply);
+    const cleanReply = cleanDisplayText(reply);
+    const aiMessage = addMessage("ai", cleanReply);
 
     if (data.pdf) {
       addDownloadButton(aiMessage, data.pdf);
     }
 
-    speakText(reply);
+    speakText(cleanReply);
 
     if (attachedFile) {
       clearSelectedFile();

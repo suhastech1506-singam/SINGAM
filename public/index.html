@@ -12,7 +12,7 @@ body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-famil
 button,input,textarea{font:inherit}
 button{cursor:pointer}
 .app{min-height:100vh;display:flex;flex-direction:column}
-header{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid var(--border);background:#0c1118}
+header{min-height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid var(--border);background:#0c1118}
 .brand{display:flex;align-items:center;gap:12px}
 .logo{width:42px;height:42px;border:1px solid var(--cyan);border-radius:12px;display:grid;place-items:center;color:var(--cyan);font-size:23px;font-weight:bold;box-shadow:0 0 16px #54e7f51a}
 .brand h1{font-size:19px;margin:0 0 4px;letter-spacing:1.5px}
@@ -56,7 +56,7 @@ textarea::placeholder{color:#748391}
 .quick-btn:hover{color:var(--cyan);border-color:var(--cyan)}
 footer{padding:13px;border-top:1px solid var(--border);color:#647482;font-size:11px;text-align:center}
 @media(max-width:600px){
-header{height:64px;padding:0 13px}
+header{min-height:64px;padding:0 13px}
 .brand h1{font-size:16px}
 .brand p{font-size:10px}
 .status{font-size:10px}
@@ -100,17 +100,20 @@ main{padding:18px 12px 14px}
   <section class="composer">
     <div class="preview" id="preview">
       <img id="previewImage" src="" alt="Selected image preview">
-      <div class="preview-info"><strong id="fileName">Selected file</strong><span id="fileSize"></span></div>
+      <div class="preview-info">
+        <strong id="fileName">Selected file</strong>
+        <span id="fileSize"></span>
+      </div>
       <button class="remove-btn" id="removeImage" type="button">Remove</button>
     </div>
 
     <div class="input-row">
       <button class="upload-btn" id="uploadBtn" type="button" aria-label="Upload image or PDF" title="Upload an image or PDF">+</button>
-      <input type="file" id="imageInput" accept=".pdf,application/pdf,image/*" hidden>
+      <input type="file" id="imageInput" accept=".pdf,application/pdf,image/jpeg,image/png,image/webp,image/gif" hidden>
       <textarea id="command" rows="1" placeholder="Ask SINGAM or ask a question about a PDF..." aria-label="Message SINGAM"></textarea>
       <button class="send-btn" id="sendBtn" type="button">SEND</button>
     </div>
-    <p class="hint">Enter to send · Shift + Enter for a new line<br>PDF text extraction works for text-based PDFs. Scanned PDFs may require OCR.</p>
+    <p class="hint">Enter to send · Shift + Enter for a new line<br>PDF extraction works for text-based PDFs. Scanned PDFs may require OCR.</p>
   </section>
 
   <div class="quick-actions">
@@ -153,7 +156,7 @@ imageInput.addEventListener("change", () => {
   const file = imageInput.files[0];
   if (!file) return;
 
-  const isImage = ["image/jpeg","image/png","image/webp","image/gif"].includes(file.type);
+  const isImage = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type);
   const isPDF = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
 
   if (!isImage && !isPDF) {
@@ -236,6 +239,7 @@ function addMessage(role, text, imageURL = null) {
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
+
     reader.onload = () => {
       const result = reader.result;
 
@@ -289,8 +293,11 @@ async function sendCommand() {
   }
 
   let displayText = command;
-  if (!displayText && isPDF) displayText = "Please summarize this PDF document.";
-  else if (!displayText && isImage) displayText = "Please analyse this image.";
+  if (!displayText && isPDF) {
+    displayText = "Please summarize this PDF document.";
+  } else if (!displayText && isImage) {
+    displayText = "Please analyse this image.";
+  }
 
   if (isPDF) displayText = "📄 " + file.name + "\n" + displayText;
 
@@ -309,7 +316,10 @@ async function sendCommand() {
     const payload = { command: command };
 
     if (fileBase64 && isImage) {
-      payload.image = { data: fileBase64, mimeType: file.type };
+      payload.image = {
+        data: fileBase64,
+        mimeType: file.type
+      };
     } else if (fileBase64 && isPDF) {
       payload.pdf = {
         data: fileBase64,
@@ -327,17 +337,35 @@ async function sendCommand() {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(data.reply || data.error || "Request failed with status " + response.status);
+      throw new Error(
+        data.reply || data.error || "Request failed with status " + response.status
+      );
     }
 
-    addMessage("ai", data.reply || "The server returned no reply. Please try again.");
+    // Conflict removed: show the AI response and speak it.
+    const reply = data.reply || "The server returned no reply. Please try again.";
+    addMessage("ai", reply);
+
+    if (data.reply && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+
+      const voiceMessage = new SpeechSynthesisUtterance(data.reply);
+      voiceMessage.lang = "en-US";
+      voiceMessage.rate = 0.9;
+      voiceMessage.pitch = 0.7;
+      voiceMessage.volume = 1;
+
+      window.speechSynthesis.speak(voiceMessage);
+    }
   } catch (error) {
-    addMessage("ai",
+    addMessage(
+      "ai",
       "I could not complete the request. Please check your internet connection, server status, and AI API configuration.\n\nDetails: " +
       error.message
     );
   } finally {
     if (localPreviewURL) URL.revokeObjectURL(localPreviewURL);
+
     busy = false;
     sendBtn.disabled = false;
     uploadBtn.disabled = false;

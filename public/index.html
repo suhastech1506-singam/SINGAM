@@ -35,8 +35,10 @@ main { width:min(920px,94%); margin:24px auto; }
 h2 { font-size:18px; margin:0 0 14px; }
 h3 { margin:0 0 10px; font-size:15px; }
 .small { color:var(--muted); font-size:12px; line-height:1.6; }
-.field { width:100%; padding:13px; margin:7px 0; border-radius:9px;
-  border:1px solid var(--border); background:var(--panel2); color:var(--text); }
+.field {
+  width:100%; padding:13px; margin:7px 0; border-radius:9px;
+  border:1px solid var(--border); background:var(--panel2); color:var(--text);
+}
 .btn {
   padding:11px 15px; border:1px solid var(--border); border-radius:9px;
   background:#172631; color:var(--text); font-weight:700;
@@ -46,16 +48,19 @@ h3 { margin:0 0 10px; font-size:15px; }
 .btnrow { display:flex; gap:8px; flex-wrap:wrap; margin-top:9px; }
 .hidden { display:none !important; }
 .auth-message { font-size:13px; margin-top:12px; white-space:pre-wrap; }
-.good { color:var(--green); } .bad { color:var(--red); }
+.good { color:var(--green); }
+.bad { color:var(--red); }
 .usage-row { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 .usage { color:var(--cyan); font-size:13px; }
 .chatbox {
-  height: min(48vh,480px); min-height:250px; overflow-y:auto;
+  height:min(48vh,480px); min-height:250px; overflow-y:auto;
   padding:14px; background:var(--panel2); border:1px solid var(--border);
   border-radius:12px; display:flex; flex-direction:column; gap:12px;
 }
-.msg { max-width:92%; padding:12px 14px; border-radius:12px;
-  white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.55; font-size:14px; }
+.msg {
+  max-width:92%; padding:12px 14px; border-radius:12px;
+  white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.55; font-size:14px;
+}
 .msg.bot { align-self:flex-start; background:#14232e; border:1px solid #263b49; }
 .msg.user { align-self:flex-end; background:#12313b; border:1px solid #28616b; }
 .msg img { max-width:100%; max-height:220px; border-radius:8px; display:block; margin-bottom:8px; }
@@ -67,6 +72,7 @@ textarea { resize:vertical; min-height:75px; max-height:200px; }
 .suggestions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
 .suggestions button { font-size:12px; }
 footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
+
 @media(max-width:600px) {
   .topbar { padding:13px 4%; }
   .brand { font-size:20px; }
@@ -78,6 +84,7 @@ footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
 </style>
 </head>
 <body>
+
 <header class="topbar">
   <div>
     <div class="brand">🦁 SINGAM</div>
@@ -89,19 +96,32 @@ footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
 <main>
   <section class="panel" id="authPanel">
     <h2>🔐 SINGAM Account</h2>
-    <p class="small">Create your account or sign in to access your personal assistant. Your daily chat allowance is linked to your account.</p>
+    <p class="small">
+      Create your account or sign in to access your personal assistant.
+      Your daily chat allowance is linked to your account.
+    </p>
+
     <form id="authForm">
       <label class="small" for="email">Email address</label>
-      <input class="field" id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      <input class="field" id="email" type="email"
+        autocomplete="email" placeholder="you@example.com" required>
+
       <label class="small" for="password">Password (minimum 8 characters)</label>
-      <input class="field" id="password" type="password" autocomplete="current-password" minlength="8" placeholder="Enter password" required>
+      <input class="field" id="password" type="password"
+        autocomplete="current-password" minlength="8"
+        placeholder="Enter password" required>
+
       <div class="btnrow">
         <button class="btn primary" type="submit" id="signInBtn">Sign In</button>
         <button class="btn" type="button" id="signUpBtn">Create Account</button>
       </div>
     </form>
+
     <div id="authMessage" class="auth-message" aria-live="polite"></div>
-    <p class="small">If email confirmation is enabled, check your inbox after creating an account. Never share your password or access token.</p>
+    <p class="small">
+      If email confirmation is enabled, check your inbox after creating an account.
+      Never share your password or access token.
+    </p>
   </section>
 
   <section class="panel hidden" id="accountPanel">
@@ -112,12 +132,18 @@ footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
       </div>
       <button class="btn danger" id="signOutBtn" type="button">Sign Out</button>
     </div>
+
     <hr style="border:0;border-top:1px solid var(--border);margin:16px 0">
+
     <div class="usage-row">
       <span class="usage" id="usageText">Daily chats: loading...</span>
       <span class="small" id="usageDate"></span>
     </div>
-    <p class="small">Your daily count resets according to India Standard Time (IST). Provider availability and free-model quotas are separate from this limit.</p>
+
+    <p class="small">
+      Your daily count resets according to India Standard Time (IST).
+      Provider availability and free-model quotas are separate from this limit.
+    </p>
   </section>
 
   <section class="panel hidden" id="chatPanel">
@@ -125,17 +151,26 @@ footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
       <h2>⚡ Command Center</h2>
       <span class="small">SYSTEM ONLINE</span>
     </div>
+
     <div class="chatbox" id="chatBox" aria-live="polite">
-      <div class="msg bot">Hey boss! Full power-la irukken 😎 Naan SINGAM. Enna matter?</div>
+      <div class="msg bot">
+        Hello, boss. I’m SINGAM, your personal AI assistant.
+        All systems are ready. How may I assist you today?
+      </div>
     </div>
+
     <div class="composer">
-      <textarea id="messageInput" class="field" placeholder="Ask SINGAM anything..." aria-label="Message"></textarea>
+      <textarea id="messageInput" class="field"
+        placeholder="Ask SINGAM anything..." aria-label="Message"></textarea>
+
       <div class="attach-row">
         <label class="btn" for="fileInput">📎 Attach image/PDF</label>
-        <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf" hidden>
+        <input id="fileInput" type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf" hidden>
         <span class="file-label" id="attachmentPreview">No attachment</span>
         <button class="btn" type="button" id="clearFileBtn">Remove file</button>
       </div>
+
       <div class="btnrow">
         <button class="btn primary" id="sendBtn" type="button">SEND ➤</button>
         <button class="btn" id="voiceInputBtn" type="button">🎙 Voice Input</button>
@@ -143,14 +178,22 @@ footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
         <button class="btn" id="stopVoiceBtn" type="button">Stop Voice</button>
       </div>
     </div>
+
     <div class="suggestions">
-      <button class="btn suggestion" type="button" data-prompt="Explain this step by step.">Explain step by step</button>
-      <button class="btn suggestion" type="button" data-prompt="Help me troubleshoot a technical problem. Ask for details if needed.">Troubleshoot</button>
-      <button class="btn suggestion" type="button" data-prompt="Give me a cybersecurity learning exercise suitable for a beginner.">Cybersecurity</button>
+      <button class="btn suggestion" type="button"
+        data-prompt="Explain this step by step.">Explain step by step</button>
+      <button class="btn suggestion" type="button"
+        data-prompt="Help me troubleshoot a technical problem. Ask for details if needed.">Troubleshoot</button>
+      <button class="btn suggestion" type="button"
+        data-prompt="Give me a cybersecurity learning exercise suitable for a beginner.">Cybersecurity</button>
     </div>
-    <p class="small" style="margin-top:12px">Don't upload passwords, API keys, financial details, or other sensitive information.</p>
+
+    <p class="small" style="margin-top:12px">
+      Don't upload passwords, API keys, financial details, or other sensitive information.
+    </p>
   </section>
 </main>
+
 <footer>SINGAM AI · Secure sign-in · Daily usage managed by the server</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -171,16 +214,20 @@ function setStatus(text, good = true) {
   $("systemStatus").textContent = "● " + text;
   $("systemStatus").style.color = good ? "var(--green)" : "var(--red)";
 }
+
 function setAuthMessage(text, good = false) {
   $("authMessage").textContent = text;
   $("authMessage").className = "auth-message " + (good ? "good" : "bad");
 }
+
 function showSignedIn(session) {
   currentSession = session;
   const signedIn = !!session;
+
   $("authPanel").classList.toggle("hidden", signedIn);
   $("accountPanel").classList.toggle("hidden", !signedIn);
   $("chatPanel").classList.toggle("hidden", !signedIn);
+
   if (signedIn) {
     $("accountEmail").textContent = session.user.email || "Signed in";
     refreshUsage();
@@ -190,47 +237,73 @@ function showSignedIn(session) {
     setStatus("READY");
   }
 }
+
 async function loadConfig() {
   try {
     const response = await fetch("/config");
     const config = await response.json();
-    if (!response.ok) throw new Error(config.error || "Server configuration unavailable.");
+
+    if (!response.ok) {
+      throw new Error(config.error || "Server configuration unavailable.");
+    }
+
     if (!config.supabaseUrl || !config.supabasePublishableKey) {
       throw new Error("Supabase public configuration is missing on the server.");
     }
+
     if (!window.supabase || !window.supabase.createClient) {
       throw new Error("Supabase library did not load. Check your internet connection and refresh.");
     }
+
     dailyLimit = Number(config.dailyChatLimit) || 100;
+
     supabaseClient = window.supabase.createClient(
       config.supabaseUrl,
       config.supabasePublishableKey
     );
+
     const { data, error } = await supabaseClient.auth.getSession();
     if (error) throw error;
+
     showSignedIn(data.session);
+
     supabaseClient.auth.onAuthStateChange((_event, session) => {
       currentSession = session;
       showSignedIn(session);
     });
+
     setStatus(currentSession ? "SIGNED IN" : "READY");
   } catch (error) {
     setStatus("CONFIG ERROR", false);
-    setAuthMessage("Could not initialize SINGAM: " + error.message +
-      "\nCheck the Render environment variables and deployment logs.");
+    setAuthMessage(
+      "Could not initialize SINGAM: " + error.message +
+      "\nCheck the Render environment variables and deployment logs."
+    );
   }
 }
+
 async function signIn(event) {
   event.preventDefault();
-  if (!supabaseClient) return setAuthMessage("Still connecting. Please wait and try again.");
+
+  if (!supabaseClient) {
+    return setAuthMessage("Still connecting. Please wait and try again.");
+  }
+
   const email = $("email").value.trim();
   const password = $("password").value;
+
   $("signInBtn").disabled = true;
   $("signUpBtn").disabled = true;
   setAuthMessage("Signing in...", true);
+
   try {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
+
     if (error) throw error;
+
     showSignedIn(data.session);
     setAuthMessage("Signed in successfully.", true);
   } catch (error) {
@@ -240,28 +313,40 @@ async function signIn(event) {
     $("signUpBtn").disabled = false;
   }
 }
+
 async function signUp() {
-  if (!supabaseClient) return setAuthMessage("Still connecting. Please wait and try again.");
+  if (!supabaseClient) {
+    return setAuthMessage("Still connecting. Please wait and try again.");
+  }
+
   const email = $("email").value.trim();
   const password = $("password").value;
+
   if (!email || password.length < 8) {
     return setAuthMessage("Enter a valid email and a password with at least 8 characters.");
   }
+
   $("signInBtn").disabled = true;
   $("signUpBtn").disabled = true;
   setAuthMessage("Creating your account...", true);
+
   try {
     const { data, error } = await supabaseClient.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: window.location.origin }
     });
+
     if (error) throw error;
+
     if (data.session) {
       showSignedIn(data.session);
       setAuthMessage("Account created. You're signed in.", true);
     } else {
-      setAuthMessage("Account request successful. Check your email to confirm your account, then return here and sign in.", true);
+      setAuthMessage(
+        "Account request successful. Check your email to confirm your account, then return here and sign in.",
+        true
+      );
     }
   } catch (error) {
     setAuthMessage(error.message || "Account creation failed.");
@@ -270,134 +355,192 @@ async function signUp() {
     $("signUpBtn").disabled = false;
   }
 }
+
 async function signOut() {
   if (!supabaseClient) return;
+
   const { error } = await supabaseClient.auth.signOut();
-  if (error) setAuthMessage(error.message);
-  else {
+
+  if (error) {
+    setAuthMessage(error.message);
+  } else {
     currentSession = null;
     showSignedIn(null);
     setAuthMessage("Signed out successfully.", true);
   }
 }
+
 async function getToken() {
-  if (!supabaseClient) throw new Error("SINGAM is still connecting.");
+  if (!supabaseClient) {
+    throw new Error("SINGAM is still connecting.");
+  }
+
   const { data, error } = await supabaseClient.auth.getSession();
   if (error) throw error;
+
   if (!data.session) {
     showSignedIn(null);
     throw new Error("Your session has expired. Please sign in again.");
   }
+
   currentSession = data.session;
   return data.session.access_token;
 }
+
 async function refreshUsage() {
   if (!currentSession) return;
+
   try {
     const token = await getToken();
+
     const response = await fetch("/usage", {
       headers: { "Authorization": "Bearer " + token }
     });
+
     const data = await response.json();
+
     if (response.status === 401) {
       await supabaseClient.auth.signOut();
       throw new Error("Session expired. Please sign in again.");
     }
-    if (!response.ok) throw new Error(data.error || "Could not load usage.");
+
+    if (!response.ok) {
+      throw new Error(data.error || "Could not load usage.");
+    }
+
     const count = Number(data.chat_count ?? data.chatCount ?? 0);
     const limit = Number(data.daily_limit ?? data.dailyLimit ?? dailyLimit);
-    $("usageText").textContent = "Daily chats: " + count + " / " + limit + " · Remaining: " + Math.max(0, limit - count);
-    $("usageDate").textContent = "Date: " + (data.usage_date || data.usageDate || "IST");
+
+    $("usageText").textContent =
+      "Daily chats: " + count + " / " + limit +
+      " · Remaining: " + Math.max(0, limit - count);
+
+    $("usageDate").textContent =
+      "Date: " + (data.usage_date || data.usageDate || "IST");
   } catch (error) {
     $("usageText").textContent = "Usage unavailable";
     $("usageDate").textContent = error.message;
   }
 }
+
 function addMessage(text, who = "bot", imageUrl = null) {
   const box = $("chatBox");
   const bubble = document.createElement("div");
   bubble.className = "msg " + who;
+
   if (imageUrl) {
     const img = document.createElement("img");
     img.src = imageUrl;
     img.alt = "Uploaded attachment preview";
     bubble.appendChild(img);
   }
+
   const content = document.createElement("div");
   content.textContent = text;
   bubble.appendChild(content);
   box.appendChild(bubble);
   box.scrollTop = box.scrollHeight;
+
   return bubble;
 }
+
 function speak(text) {
   if (!voiceEnabled || !("speechSynthesis" in window)) return;
+
   window.speechSynthesis.cancel();
+
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   utterance.rate = 0.9;
   utterance.pitch = 0.75;
   utterance.volume = 1;
+
   const voices = window.speechSynthesis.getVoices();
   const voice = voices.find(v => v.lang === "en-US") ||
                 voices.find(v => v.lang.startsWith("en-"));
+
   if (voice) utterance.voice = voice;
   window.speechSynthesis.speak(utterance);
 }
+
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
+
     reader.onload = () => {
       const result = String(reader.result || "");
       resolve(result.includes(",") ? result.split(",")[1] : result);
     };
+
     reader.onerror = () => reject(new Error("Could not read the selected file."));
     reader.readAsDataURL(file);
   });
 }
+
 $("fileInput").addEventListener("change", () => {
   const file = $("fileInput").files[0];
   selectedFile = file || null;
+
   if (!file) {
     $("attachmentPreview").textContent = "No attachment";
     return;
   }
+
   if (file.size > 5 * 1024 * 1024) {
     selectedFile = null;
     $("fileInput").value = "";
     $("attachmentPreview").textContent = "File exceeds 5 MB";
     return;
   }
-  const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
-  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+  const allowed = [
+    "image/jpeg", "image/png", "image/webp",
+    "image/gif", "application/pdf"
+  ];
+
+  const isPdf = file.type === "application/pdf" ||
+                file.name.toLowerCase().endsWith(".pdf");
+
   if (!allowed.includes(file.type) && !isPdf) {
     selectedFile = null;
     $("fileInput").value = "";
     $("attachmentPreview").textContent = "Unsupported file type";
     return;
   }
-  $("attachmentPreview").textContent = file.name + " (" + (file.size / 1024).toFixed(0) + " KB)";
+
+  $("attachmentPreview").textContent =
+    file.name + " (" + (file.size / 1024).toFixed(0) + " KB)";
 });
+
 $("clearFileBtn").addEventListener("click", () => {
   selectedFile = null;
   $("fileInput").value = "";
   $("attachmentPreview").textContent = "No attachment";
 });
+
 async function sendMessage(forcedPrompt = null) {
   if (busy) return;
+
   const message = (forcedPrompt ?? $("messageInput").value).trim();
   if (!message && !selectedFile) return;
+
   busy = true;
   $("sendBtn").disabled = true;
+
   let waitingBubble = null;
+
   try {
     const token = await getToken();
-    let body = { command: message };
+    const body = { command: message };
     let previewUrl = null;
+
     if (selectedFile) {
       const file = selectedFile;
       const base64 = await fileToBase64(file);
-      const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+      const isPdf = file.type === "application/pdf" ||
+                    file.name.toLowerCase().endsWith(".pdf");
+
       if (isPdf) {
         body.pdfBase64 = base64;
         body.pdfName = file.name;
@@ -407,10 +550,20 @@ async function sendMessage(forcedPrompt = null) {
         previewUrl = URL.createObjectURL(file);
       }
     }
-    addMessage(message || (selectedFile ? "Please analyze this attachment." : ""), "user", previewUrl);
-    if (previewUrl) setTimeout(() => URL.revokeObjectURL(previewUrl), 60000);
+
+    addMessage(
+      message || (selectedFile ? "Please analyze this attachment." : ""),
+      "user",
+      previewUrl
+    );
+
+    if (previewUrl) {
+      setTimeout(() => URL.revokeObjectURL(previewUrl), 60000);
+    }
+
     $("messageInput").value = "";
     waitingBubble = addMessage("SINGAM is thinking...", "bot");
+
     const response = await fetch("/ask", {
       method: "POST",
       headers: {
@@ -419,52 +572,87 @@ async function sendMessage(forcedPrompt = null) {
       },
       body: JSON.stringify(body)
     });
+
     const data = await response.json();
     waitingBubble.remove();
+
     if (response.status === 401) {
       await supabaseClient.auth.signOut();
       throw new Error(data.error || "Session expired. Please sign in again.");
     }
+
     if (response.status === 429) {
-      addMessage(data.error || data.reply || "Daily chat limit reached. Try again tomorrow.", "bot");
+      addMessage(
+        data.error || data.reply || "Daily chat limit reached. Try again tomorrow.",
+        "bot"
+      );
       await refreshUsage();
       return;
     }
+
     if (!response.ok) {
-      throw new Error(data.error || data.reply || ("Request failed (" + response.status + ")"));
+      throw new Error(
+        data.error || data.reply || ("Request failed (" + response.status + ")")
+      );
     }
+
     addMessage(data.reply || "No response received.", "bot");
+
     if (data.usage) {
       const count = Number(data.usage.chat_count ?? data.usage.chatCount);
-      const limit = Number(data.usage.daily_limit ?? data.usage.dailyLimit ?? dailyLimit);
+      const limit = Number(
+        data.usage.daily_limit ?? data.usage.dailyLimit ?? dailyLimit
+      );
+
       if (Number.isFinite(count)) {
-        $("usageText").textContent = "Daily chats: " + count + " / " + limit + " · Remaining: " + Math.max(0, limit - count);
-        $("usageDate").textContent = "Date: " + (data.usage.usage_date || data.usage.usageDate || "IST");
+        $("usageText").textContent =
+          "Daily chats: " + count + " / " + limit +
+          " · Remaining: " + Math.max(0, limit - count);
+
+        $("usageDate").textContent =
+          "Date: " + (data.usage.usage_date || data.usage.usageDate || "IST");
       }
     } else {
       await refreshUsage();
     }
+
     if (data.pdf && data.pdf.data) {
       const raw = atob(data.pdf.data);
       const bytes = new Uint8Array(raw.length);
-      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-      const blob = new Blob([bytes], { type: data.pdf.mimeType || "application/pdf" });
+
+      for (let i = 0; i < raw.length; i++) {
+        bytes[i] = raw.charCodeAt(i);
+      }
+
+      const blob = new Blob(
+        [bytes],
+        { type: data.pdf.mimeType || "application/pdf" }
+      );
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = data.pdf.filename || "singam-document.pdf";
+
       document.body.appendChild(link);
       link.click();
       link.remove();
+
       setTimeout(() => URL.revokeObjectURL(url), 60000);
       addMessage("PDF generated and downloaded: " + link.download, "bot");
     }
+
     speak(data.reply || "");
+
     selectedFile = null;
     $("fileInput").value = "";
     $("attachmentPreview").textContent = "No attachment";
+
   } catch (error) {
-    if (waitingBubble && waitingBubble.isConnected) waitingBubble.remove();
+    if (waitingBubble && waitingBubble.isConnected) {
+      waitingBubble.remove();
+    }
+
     addMessage("Error: " + (error.message || "Something went wrong."), "bot");
   } finally {
     busy = false;
@@ -472,59 +660,90 @@ async function sendMessage(forcedPrompt = null) {
     $("messageInput").focus();
   }
 }
+
 $("authForm").addEventListener("submit", signIn);
 $("signUpBtn").addEventListener("click", signUp);
 $("signOutBtn").addEventListener("click", signOut);
 $("sendBtn").addEventListener("click", () => sendMessage());
+
 $("messageInput").addEventListener("keydown", event => {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
   }
 });
+
 document.querySelectorAll(".suggestion").forEach(button => {
   button.addEventListener("click", () => sendMessage(button.dataset.prompt));
 });
+
 $("voiceToggleBtn").addEventListener("click", () => {
   voiceEnabled = !voiceEnabled;
-  $("voiceToggleBtn").textContent = voiceEnabled ? "🔊 Voice: ON" : "🔇 Voice: OFF";
-  if (!voiceEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
+
+  $("voiceToggleBtn").textContent =
+    voiceEnabled ? "🔊 Voice: ON" : "🔇 Voice: OFF";
+
+  if (!voiceEnabled && "speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
 });
+
 $("stopVoiceBtn").addEventListener("click", () => {
-  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
 });
+
 $("voiceInputBtn").addEventListener("click", () => {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
   if (!SpeechRecognition) {
-    addMessage("Voice input is not supported by this browser. Try Chrome and allow microphone access.", "bot");
+    addMessage(
+      "Voice input is not supported by this browser. Try Chrome and allow microphone access.",
+      "bot"
+    );
     return;
   }
+
   if (recognition) {
     recognition.stop();
     recognition = null;
     $("voiceInputBtn").textContent = "🎙 Voice Input";
     return;
   }
+
   recognition = new SpeechRecognition();
   recognition.lang = "en-US";
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
-  recognition.onstart = () => $("voiceInputBtn").textContent = "⏹ Stop Listening";
+
+  recognition.onstart = () => {
+    $("voiceInputBtn").textContent = "⏹ Stop Listening";
+  };
+
   recognition.onresult = event => {
     $("messageInput").value = event.results[0][0].transcript;
     $("messageInput").focus();
   };
-  recognition.onerror = event => addMessage("Voice input error: " + event.error, "bot");
+
+  recognition.onerror = event => {
+    addMessage("Voice input error: " + event.error, "bot");
+  };
+
   recognition.onend = () => {
     recognition = null;
     $("voiceInputBtn").textContent = "🎙 Voice Input";
   };
-  try { recognition.start(); }
-  catch (error) {
+
+  try {
+    recognition.start();
+  } catch (error) {
     recognition = null;
     addMessage("Could not start microphone: " + error.message, "bot");
   }
 });
+
 loadConfig();
 </script>
 </body>

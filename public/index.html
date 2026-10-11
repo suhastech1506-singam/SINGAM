@@ -1,22 +1,23 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SINGAM | AI Command Center</title>
+<title>SINGAM | Technician AI</title>
 <style>
 :root {
   --bg:#070b10; --panel:#101720; --panel2:#0b121a;
   --border:#253441; --cyan:#55eaff; --text:#edf7ff;
   --muted:#91a3b4; --green:#55e6a5; --red:#ff7777;
+  --yellow:#ffd166;
 }
 * { box-sizing:border-box; }
 body {
   margin:0; min-height:100vh; background:var(--bg); color:var(--text);
   font-family:Arial,Helvetica,sans-serif;
 }
-button,input,textarea { font:inherit; }
+button,input,textarea,select { font:inherit; }
 button { cursor:pointer; }
 button:disabled { opacity:.5; cursor:not-allowed; }
 .topbar {
@@ -27,7 +28,7 @@ button:disabled { opacity:.5; cursor:not-allowed; }
 .brand { font-size:23px; font-weight:900; letter-spacing:3px; color:var(--cyan); }
 .subtitle { font-size:11px; color:var(--muted); margin-top:5px; }
 .status { color:var(--green); font-size:12px; }
-main { width:min(920px,94%); margin:24px auto; }
+main { width:min(1050px,94%); margin:24px auto; }
 .panel {
   background:var(--panel); border:1px solid var(--border);
   border-radius:15px; padding:20px; margin-bottom:16px;
@@ -47,10 +48,10 @@ h3 { margin:0 0 10px; font-size:15px; }
 .btn.danger { color:var(--red); }
 .btnrow { display:flex; gap:8px; flex-wrap:wrap; margin-top:9px; }
 .hidden { display:none !important; }
-.auth-message { font-size:13px; margin-top:12px; white-space:pre-wrap; }
+.auth-message { font-size:13px; margin-top:12px; white-space:pre-wrap; overflow-wrap:anywhere; }
 .good { color:var(--green); }
 .bad { color:var(--red); }
-.usage-row { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.usage-row { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
 .usage { color:var(--cyan); font-size:13px; }
 .chatbox {
   height:min(48vh,480px); min-height:250px; overflow-y:auto;
@@ -67,12 +68,38 @@ h3 { margin:0 0 10px; font-size:15px; }
 .composer { display:flex; flex-direction:column; gap:9px; margin-top:12px; }
 textarea { resize:vertical; min-height:75px; max-height:200px; }
 .attach-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.file-label { font-size:12px; color:var(--muted); }
+.file-label { font-size:12px; color:var(--muted); overflow-wrap:anywhere; }
 #attachmentPreview { font-size:12px; color:var(--cyan); }
 .suggestions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
 .suggestions button { font-size:12px; }
+.navrow { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.navbtn { flex:1; min-width:130px; }
+.navbtn.active { border-color:var(--cyan); color:var(--cyan); }
+.history-toolbar {
+  display:grid; grid-template-columns:2fr 1fr auto; gap:8px; align-items:center;
+}
+.history-list { display:grid; gap:10px; margin-top:14px; }
+.repair-card {
+  border:1px solid var(--border); background:var(--panel2);
+  border-radius:12px; padding:14px;
+}
+.repair-card h3 { overflow-wrap:anywhere; }
+.repair-meta { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+.pill {
+  border:1px solid var(--border); padding:4px 8px; border-radius:20px;
+  font-size:11px; color:var(--muted);
+}
+.pill.completed { color:var(--green); }
+.pill.in_progress { color:var(--cyan); }
+.pill.pending { color:var(--yellow); }
+.pill.unable_to_repair { color:var(--red); }
+.report-output {
+  white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6;
+  background:var(--panel2); border:1px solid var(--border);
+  padding:14px; border-radius:10px; min-height:100px;
+}
+.empty { text-align:center; padding:24px 12px; color:var(--muted); }
 footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
-
 @media(max-width:600px) {
   .topbar { padding:13px 4%; }
   .brand { font-size:20px; }
@@ -80,6 +107,8 @@ footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
   .panel { padding:14px; }
   .chatbox { height:45vh; }
   .msg { max-width:98%; }
+  .history-toolbar { grid-template-columns:1fr; }
+  .history-toolbar .btn { width:100%; }
 }
 </style>
 </head>
@@ -88,7 +117,7 @@ footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
 <header class="topbar">
   <div>
     <div class="brand">🦁 SINGAM</div>
-    <div class="subtitle">PERSONAL TECHNICIAN INTELLIGENCE SYSTEM</div>
+    <div class="subtitle">TECHNICIAN INTELLIGENCE SYSTEM</div>
   </div>
   <div class="status" id="systemStatus">● CONNECTING</div>
 </header>
@@ -97,31 +126,24 @@ footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
   <section class="panel" id="authPanel">
     <h2>🔐 SINGAM Account</h2>
     <p class="small">
-      Create your account or sign in to access your personal assistant.
+      Sign in to access your technician assistant and private repair records.
       Your daily chat allowance is linked to your account.
     </p>
-
     <form id="authForm">
       <label class="small" for="email">Email address</label>
       <input class="field" id="email" type="email"
         autocomplete="email" placeholder="you@example.com" required>
-
       <label class="small" for="password">Password (minimum 8 characters)</label>
       <input class="field" id="password" type="password"
         autocomplete="current-password" minlength="8"
         placeholder="Enter password" required>
-
       <div class="btnrow">
         <button class="btn primary" type="submit" id="signInBtn">Sign In</button>
         <button class="btn" type="button" id="signUpBtn">Create Account</button>
       </div>
     </form>
-
     <div id="authMessage" class="auth-message" aria-live="polite"></div>
-    <p class="small">
-      If email confirmation is enabled, check your inbox after creating an account.
-      Never share your password or access token.
-    </p>
+    <p class="small">Never share your password, access token, API key, or sensitive customer information unnecessarily.</p>
   </section>
 
   <section class="panel hidden" id="accountPanel">
@@ -132,45 +154,36 @@ footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
       </div>
       <button class="btn danger" id="signOutBtn" type="button">Sign Out</button>
     </div>
-
     <hr style="border:0;border-top:1px solid var(--border);margin:16px 0">
-
     <div class="usage-row">
       <span class="usage" id="usageText">Daily chats: loading...</span>
       <span class="small" id="usageDate"></span>
     </div>
-
-    <p class="small">
-      Your daily count resets according to India Standard Time (IST).
-      Provider availability and free-model quotas are separate from this limit.
-    </p>
+    <p class="small">Your daily count resets according to India Standard Time (IST). Provider availability and free-model quotas are separate from this limit.</p>
   </section>
+
+  <div class="navrow hidden" id="appNavigation">
+    <button class="btn navbtn active" id="chatTab" type="button">⚡ Command Center</button>
+    <button class="btn navbtn" id="historyTab" type="button">🧰 Repair History</button>
+    <button class="btn navbtn" id="newReportTab" type="button">📋 New Repair Record</button>
+  </div>
 
   <section class="panel hidden" id="chatPanel">
     <div class="usage-row" style="margin-bottom:12px">
       <h2>⚡ Command Center</h2>
       <span class="small">SYSTEM ONLINE</span>
     </div>
-
     <div class="chatbox" id="chatBox" aria-live="polite">
-      <div class="msg bot">
-        Hello, boss. I’m SINGAM, your personal AI assistant.
-        All systems are ready. How may I assist you today?
-      </div>
+      <div class="msg bot">Hello, boss. I’m SINGAM, your technician AI assistant. Describe a technical issue or upload an image/PDF to get started.</div>
     </div>
-
     <div class="composer">
-      <textarea id="messageInput" class="field"
-        placeholder="Ask SINGAM anything..." aria-label="Message"></textarea>
-
+      <textarea id="messageInput" class="field" placeholder="Ask SINGAM about a technical problem..." aria-label="Message"></textarea>
       <div class="attach-row">
         <label class="btn" for="fileInput">📎 Attach image/PDF</label>
-        <input id="fileInput" type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf" hidden>
+        <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf" hidden>
         <span class="file-label" id="attachmentPreview">No attachment</span>
         <button class="btn" type="button" id="clearFileBtn">Remove file</button>
       </div>
-
       <div class="btnrow">
         <button class="btn primary" id="sendBtn" type="button">SEND ➤</button>
         <button class="btn" id="voiceInputBtn" type="button">🎙 Voice Input</button>
@@ -178,23 +191,91 @@ footer { text-align:center; color:var(--muted); font-size:11px; padding:20px; }
         <button class="btn" id="stopVoiceBtn" type="button">Stop Voice</button>
       </div>
     </div>
-
     <div class="suggestions">
-      <button class="btn suggestion" type="button"
-        data-prompt="Explain this step by step.">Explain step by step</button>
-      <button class="btn suggestion" type="button"
-        data-prompt="Help me troubleshoot a technical problem. Ask for details if needed.">Troubleshoot</button>
-      <button class="btn suggestion" type="button"
-        data-prompt="Give me a cybersecurity learning exercise suitable for a beginner.">Cybersecurity</button>
+      <button class="btn suggestion" type="button" data-prompt="Explain this step by step.">Explain step by step</button>
+      <button class="btn suggestion" type="button" data-prompt="Help me troubleshoot a technical problem. Ask for details if needed.">Troubleshoot</button>
+      <button class="btn suggestion" type="button" data-prompt="Give me a cybersecurity learning exercise suitable for a beginner.">Cybersecurity</button>
+      <button class="btn suggestion" type="button" data-prompt="Create a professional repair report for the device issue I describe. Ask for missing details first.">Create Repair Report</button>
     </div>
+    <p class="small" style="margin-top:12px">Don't upload passwords, API keys, financial details, or other sensitive information.</p>
+  </section>
 
-    <p class="small" style="margin-top:12px">
-      Don't upload passwords, API keys, financial details, or other sensitive information.
-    </p>
+  <section class="panel hidden" id="repairHistoryPanel">
+    <div class="usage-row">
+      <div>
+        <h2>🧰 Repair History</h2>
+        <p class="small">View and manage repair records saved to your account.</p>
+      </div>
+      <button class="btn primary" id="historyRefreshBtn" type="button">↻ Refresh</button>
+    </div>
+    <div class="history-toolbar">
+      <input class="field" id="historySearch" type="search" placeholder="Search report, device, customer...">
+      <select class="field" id="historyStatus">
+        <option value="">All statuses</option>
+        <option value="pending">Pending</option>
+        <option value="in_progress">In progress</option>
+        <option value="completed">Completed</option>
+        <option value="unable_to_repair">Unable to repair</option>
+      </select>
+      <button class="btn" id="historySearchBtn" type="button">Search</button>
+    </div>
+    <div id="historyMessage" class="auth-message" aria-live="polite"></div>
+    <div id="historyList" class="history-list">
+      <div class="empty">Open Repair History to load your saved records.</div>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="repairFormPanel">
+    <h2>📋 New Repair Record</h2>
+    <p class="small">Enter the service details. Required fields are marked. A saved record can later be updated in Repair History.</p>
+    <form id="repairForm">
+      <label class="small" for="customerName">Customer name (optional)</label>
+      <input class="field" id="customerName" maxlength="120" placeholder="Customer name">
+      <label class="small" for="deviceType">Device type *</label>
+      <input class="field" id="deviceType" maxlength="100" placeholder="Laptop, desktop, printer..." required>
+      <label class="small" for="brandModel">Brand / model</label>
+      <input class="field" id="brandModel" maxlength="150" placeholder="Brand and model">
+      <label class="small" for="complaint">Customer complaint *</label>
+      <textarea class="field" id="complaint" maxlength="5000" placeholder="Describe the reported issue" required></textarea>
+      <label class="small" for="diagnosis">Diagnosis / findings</label>
+      <textarea class="field" id="diagnosis" maxlength="8000" placeholder="Tests performed and findings"></textarea>
+      <label class="small" for="repairActions">Repair actions</label>
+      <textarea class="field" id="repairActions" maxlength="8000" placeholder="Work performed or recommended"></textarea>
+      <label class="small" for="partsUsed">Parts used</label>
+      <input class="field" id="partsUsed" maxlength="1000" placeholder="Parts replaced, if any">
+      <label class="small" for="repairCost">Cost (optional)</label>
+      <input class="field" id="repairCost" type="number" min="0" max="999999999" step="0.01" placeholder="0.00">
+      <label class="small" for="repairStatus">Status</label>
+      <select class="field" id="repairStatus">
+        <option value="pending">Pending</option>
+        <option value="in_progress">In progress</option>
+        <option value="completed">Completed</option>
+        <option value="unable_to_repair">Unable to repair</option>
+      </select>
+      <div class="btnrow">
+        <button class="btn primary" type="submit" id="saveRepairBtn">Save Repair Record</button>
+        <button class="btn" type="reset" id="resetRepairBtn">Clear Form</button>
+      </div>
+    </form>
+    <div id="repairFormMessage" class="auth-message" aria-live="polite"></div>
+  </section>
+
+  <section class="panel hidden" id="repairDetailPanel">
+    <div class="usage-row">
+      <h2>📄 Repair Record Details</h2>
+      <button class="btn" id="closeDetailBtn" type="button">Close</button>
+    </div>
+    <div id="repairDetailContent" class="report-output"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="downloadRepairPdfBtn" type="button">Download PDF</button>
+      <button class="btn" id="editRepairBtn" type="button">Edit Record</button>
+      <button class="btn danger" id="deleteRepairDetailBtn" type="button">Delete Record</button>
+    </div>
+    <p class="small" id="detailMessage"></p>
   </section>
 </main>
 
-<footer>SINGAM AI · Secure sign-in · Daily usage managed by the server</footer>
+<footer>SINGAM Technician AI · Secure sign-in · Private repair history</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -207,340 +288,270 @@ let busy = false;
 let voiceEnabled = true;
 let currentSession = null;
 let recognition = null;
+let repairRecords = [];
+let activeRepair = null;
+let repairBusy = false;
 
-const $ = (id) => document.getElementById(id);
+const $ = id => document.getElementById(id);
+const VALID_STATUSES = ["pending", "in_progress", "completed", "unable_to_repair"];
 
 function setStatus(text, good = true) {
   $("systemStatus").textContent = "● " + text;
   $("systemStatus").style.color = good ? "var(--green)" : "var(--red)";
 }
-
 function setAuthMessage(text, good = false) {
   $("authMessage").textContent = text;
   $("authMessage").className = "auth-message " + (good ? "good" : "bad");
 }
-
+function setHistoryMessage(text, good = false) {
+  $("historyMessage").textContent = text;
+  $("historyMessage").className = "auth-message " + (good ? "good" : "bad");
+}
+function setRepairFormMessage(text, good = false) {
+  $("repairFormMessage").textContent = text;
+  $("repairFormMessage").className = "auth-message " + (good ? "good" : "bad");
+}
+function escapeText(value) {
+  return String(value ?? "");
+}
 function showSignedIn(session) {
   currentSession = session;
   const signedIn = !!session;
-
   $("authPanel").classList.toggle("hidden", signedIn);
   $("accountPanel").classList.toggle("hidden", !signedIn);
-  $("chatPanel").classList.toggle("hidden", !signedIn);
+  $("appNavigation").classList.toggle("hidden", !signedIn);
 
   if (signedIn) {
     $("accountEmail").textContent = session.user.email || "Signed in";
     refreshUsage();
     setStatus("SIGNED IN");
+    showPage("chat");
   } else {
+    $("chatPanel").classList.add("hidden");
+    $("repairHistoryPanel").classList.add("hidden");
+    $("repairFormPanel").classList.add("hidden");
+    $("repairDetailPanel").classList.add("hidden");
+    $("appNavigation").classList.add("hidden");
     $("usageText").textContent = "Daily chats: sign in to view";
+    $("usageDate").textContent = "";
+    repairRecords = [];
+    activeRepair = null;
     setStatus("READY");
   }
 }
-
+function showPage(page) {
+  const signedIn = !!currentSession;
+  $("chatPanel").classList.toggle("hidden", !(signedIn && page === "chat"));
+  $("repairHistoryPanel").classList.toggle("hidden", !(signedIn && page === "history"));
+  $("repairFormPanel").classList.toggle("hidden", !(signedIn && page === "new"));
+  if (page !== "detail") $("repairDetailPanel").classList.add("hidden");
+  $("chatTab").classList.toggle("active", page === "chat");
+  $("historyTab").classList.toggle("active", page === "history");
+  $("newReportTab").classList.toggle("active", page === "new");
+  if (page === "history") loadRepairHistory();
+}
 async function loadConfig() {
   try {
     const response = await fetch("/config");
     const config = await response.json();
-
-    if (!response.ok) {
-      throw new Error(config.error || "Server configuration unavailable.");
-    }
-
+    if (!response.ok) throw new Error(config.error || "Server configuration unavailable.");
     if (!config.supabaseUrl || !config.supabasePublishableKey) {
       throw new Error("Supabase public configuration is missing on the server.");
     }
-
-    if (!window.supabase || !window.supabase.createClient) {
-      throw new Error("Supabase library did not load. Check your internet connection and refresh.");
+    if (!window.supabase?.createClient) {
+      throw new Error("Supabase library did not load. Check your connection and refresh.");
     }
-
     dailyLimit = Number(config.dailyChatLimit) || 100;
-
-    supabaseClient = window.supabase.createClient(
-      config.supabaseUrl,
-      config.supabasePublishableKey
-    );
-
+    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey);
     const { data, error } = await supabaseClient.auth.getSession();
     if (error) throw error;
-
     showSignedIn(data.session);
-
     supabaseClient.auth.onAuthStateChange((_event, session) => {
       currentSession = session;
       showSignedIn(session);
     });
-
     setStatus(currentSession ? "SIGNED IN" : "READY");
   } catch (error) {
     setStatus("CONFIG ERROR", false);
-    setAuthMessage(
-      "Could not initialize SINGAM: " + error.message +
-      "\nCheck the Render environment variables and deployment logs."
-    );
+    setAuthMessage("Could not initialize SINGAM: " + error.message +
+      "\nCheck Render environment variables and deployment logs.");
   }
 }
-
 async function signIn(event) {
   event.preventDefault();
-
-  if (!supabaseClient) {
-    return setAuthMessage("Still connecting. Please wait and try again.");
-  }
-
+  if (!supabaseClient) return setAuthMessage("Still connecting. Please wait and try again.");
   const email = $("email").value.trim();
   const password = $("password").value;
-
-  $("signInBtn").disabled = true;
-  $("signUpBtn").disabled = true;
+  $("signInBtn").disabled = $("signUpBtn").disabled = true;
   setAuthMessage("Signing in...", true);
-
   try {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
-
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) throw error;
-
     showSignedIn(data.session);
     setAuthMessage("Signed in successfully.", true);
   } catch (error) {
     setAuthMessage(error.message || "Sign-in failed.");
   } finally {
-    $("signInBtn").disabled = false;
-    $("signUpBtn").disabled = false;
+    $("signInBtn").disabled = $("signUpBtn").disabled = false;
   }
 }
-
 async function signUp() {
-  if (!supabaseClient) {
-    return setAuthMessage("Still connecting. Please wait and try again.");
-  }
-
+  if (!supabaseClient) return setAuthMessage("Still connecting. Please wait and try again.");
   const email = $("email").value.trim();
   const password = $("password").value;
-
   if (!email || password.length < 8) {
     return setAuthMessage("Enter a valid email and a password with at least 8 characters.");
   }
-
-  $("signInBtn").disabled = true;
-  $("signUpBtn").disabled = true;
+  $("signInBtn").disabled = $("signUpBtn").disabled = true;
   setAuthMessage("Creating your account...", true);
-
   try {
     const { data, error } = await supabaseClient.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: window.location.origin }
+      email, password, options: { emailRedirectTo: window.location.origin }
     });
-
     if (error) throw error;
-
     if (data.session) {
       showSignedIn(data.session);
       setAuthMessage("Account created. You're signed in.", true);
     } else {
-      setAuthMessage(
-        "Account request successful. Check your email to confirm your account, then return here and sign in.",
-        true
-      );
+      setAuthMessage("Account request successful. Check your email to confirm, then sign in.", true);
     }
   } catch (error) {
     setAuthMessage(error.message || "Account creation failed.");
   } finally {
-    $("signInBtn").disabled = false;
-    $("signUpBtn").disabled = false;
+    $("signInBtn").disabled = $("signUpBtn").disabled = false;
   }
 }
-
 async function signOut() {
   if (!supabaseClient) return;
-
   const { error } = await supabaseClient.auth.signOut();
-
-  if (error) {
-    setAuthMessage(error.message);
-  } else {
+  if (error) setAuthMessage(error.message);
+  else {
     currentSession = null;
     showSignedIn(null);
     setAuthMessage("Signed out successfully.", true);
   }
 }
-
 async function getToken() {
-  if (!supabaseClient) {
-    throw new Error("SINGAM is still connecting.");
-  }
-
+  if (!supabaseClient) throw new Error("SINGAM is still connecting.");
   const { data, error } = await supabaseClient.auth.getSession();
   if (error) throw error;
-
   if (!data.session) {
     showSignedIn(null);
     throw new Error("Your session has expired. Please sign in again.");
   }
-
   currentSession = data.session;
   return data.session.access_token;
 }
-
+async function apiFetch(url, options = {}) {
+  const token = await getToken();
+  const headers = { ...(options.headers || {}), Authorization: "Bearer " + token };
+  const response = await fetch(url, { ...options, headers });
+  let data = {};
+  try { data = await response.json(); } catch (_) {}
+  if (response.status === 401) {
+    await supabaseClient.auth.signOut();
+    throw new Error(data.error || "Session expired. Please sign in again.");
+  }
+  if (!response.ok) throw new Error(data.error || data.reply || ("Request failed (" + response.status + ")"));
+  return data;
+}
 async function refreshUsage() {
   if (!currentSession) return;
-
   try {
-    const token = await getToken();
-
-    const response = await fetch("/usage", {
-      headers: { "Authorization": "Bearer " + token }
-    });
-
-    const data = await response.json();
-
-    if (response.status === 401) {
-      await supabaseClient.auth.signOut();
-      throw new Error("Session expired. Please sign in again.");
-    }
-
-    if (!response.ok) {
-      throw new Error(data.error || "Could not load usage.");
-    }
-
+    const data = await apiFetch("/usage");
     const count = Number(data.chat_count ?? data.chatCount ?? 0);
     const limit = Number(data.daily_limit ?? data.dailyLimit ?? dailyLimit);
-
-    $("usageText").textContent =
-      "Daily chats: " + count + " / " + limit +
+    $("usageText").textContent = "Daily chats: " + count + " / " + limit +
       " · Remaining: " + Math.max(0, limit - count);
-
-    $("usageDate").textContent =
-      "Date: " + (data.usage_date || data.usageDate || "IST");
+    $("usageDate").textContent = "Date: " + (data.usage_date || data.usageDate || "IST");
   } catch (error) {
     $("usageText").textContent = "Usage unavailable";
     $("usageDate").textContent = error.message;
   }
 }
-
 function addMessage(text, who = "bot", imageUrl = null) {
-  const box = $("chatBox");
   const bubble = document.createElement("div");
   bubble.className = "msg " + who;
-
   if (imageUrl) {
     const img = document.createElement("img");
     img.src = imageUrl;
     img.alt = "Uploaded attachment preview";
     bubble.appendChild(img);
   }
-
   const content = document.createElement("div");
   content.textContent = text;
   bubble.appendChild(content);
-  box.appendChild(bubble);
-  box.scrollTop = box.scrollHeight;
-
+  $("chatBox").appendChild(bubble);
+  $("chatBox").scrollTop = $("chatBox").scrollHeight;
   return bubble;
 }
-
 function speak(text) {
   if (!voiceEnabled || !("speechSynthesis" in window)) return;
-
   window.speechSynthesis.cancel();
-
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   utterance.rate = 0.9;
   utterance.pitch = 0.75;
   utterance.volume = 1;
-
   const voices = window.speechSynthesis.getVoices();
-  const voice = voices.find(v => v.lang === "en-US") ||
-                voices.find(v => v.lang.startsWith("en-"));
-
+  const voice = voices.find(v => v.lang === "en-US") || voices.find(v => v.lang.startsWith("en-"));
   if (voice) utterance.voice = voice;
   window.speechSynthesis.speak(utterance);
 }
-
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-
     reader.onload = () => {
       const result = String(reader.result || "");
       resolve(result.includes(",") ? result.split(",")[1] : result);
     };
-
     reader.onerror = () => reject(new Error("Could not read the selected file."));
     reader.readAsDataURL(file);
   });
 }
-
 $("fileInput").addEventListener("change", () => {
   const file = $("fileInput").files[0];
   selectedFile = file || null;
-
   if (!file) {
     $("attachmentPreview").textContent = "No attachment";
     return;
   }
-
   if (file.size > 5 * 1024 * 1024) {
     selectedFile = null;
     $("fileInput").value = "";
     $("attachmentPreview").textContent = "File exceeds 5 MB";
     return;
   }
-
-  const allowed = [
-    "image/jpeg", "image/png", "image/webp",
-    "image/gif", "application/pdf"
-  ];
-
-  const isPdf = file.type === "application/pdf" ||
-                file.name.toLowerCase().endsWith(".pdf");
-
+  const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
+  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
   if (!allowed.includes(file.type) && !isPdf) {
     selectedFile = null;
     $("fileInput").value = "";
     $("attachmentPreview").textContent = "Unsupported file type";
     return;
   }
-
-  $("attachmentPreview").textContent =
-    file.name + " (" + (file.size / 1024).toFixed(0) + " KB)";
+  $("attachmentPreview").textContent = file.name + " (" + (file.size / 1024).toFixed(0) + " KB)";
 });
-
 $("clearFileBtn").addEventListener("click", () => {
   selectedFile = null;
   $("fileInput").value = "";
   $("attachmentPreview").textContent = "No attachment";
 });
-
 async function sendMessage(forcedPrompt = null) {
   if (busy) return;
-
   const message = (forcedPrompt ?? $("messageInput").value).trim();
   if (!message && !selectedFile) return;
-
   busy = true;
   $("sendBtn").disabled = true;
-
   let waitingBubble = null;
-
+  let previewUrl = null;
   try {
     const token = await getToken();
-    const body = { command: message };
-    let previewUrl = null;
-
+    const body = { command: message, message };
     if (selectedFile) {
       const file = selectedFile;
       const base64 = await fileToBase64(file);
-
-      const isPdf = file.type === "application/pdf" ||
-                    file.name.toLowerCase().endsWith(".pdf");
-
+      const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
       if (isPdf) {
         body.pdfBase64 = base64;
         body.pdfName = file.name;
@@ -550,109 +561,59 @@ async function sendMessage(forcedPrompt = null) {
         previewUrl = URL.createObjectURL(file);
       }
     }
-
-    addMessage(
-      message || (selectedFile ? "Please analyze this attachment." : ""),
-      "user",
-      previewUrl
-    );
-
-    if (previewUrl) {
-      setTimeout(() => URL.revokeObjectURL(previewUrl), 60000);
-    }
-
+    addMessage(message || "Please analyze this attachment.", "user", previewUrl);
+    if (previewUrl) setTimeout(() => URL.revokeObjectURL(previewUrl), 60000);
     $("messageInput").value = "";
     waitingBubble = addMessage("SINGAM is thinking...", "bot");
-
     const response = await fetch("/ask", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      },
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
       body: JSON.stringify(body)
     });
-
     const data = await response.json();
     waitingBubble.remove();
-
     if (response.status === 401) {
       await supabaseClient.auth.signOut();
       throw new Error(data.error || "Session expired. Please sign in again.");
     }
-
     if (response.status === 429) {
-      addMessage(
-        data.error || data.reply || "Daily chat limit reached. Try again tomorrow.",
-        "bot"
-      );
+      addMessage(data.error || data.reply || "Chat limit reached or AI provider is rate-limited.", "bot");
       await refreshUsage();
       return;
     }
-
-    if (!response.ok) {
-      throw new Error(
-        data.error || data.reply || ("Request failed (" + response.status + ")")
-      );
-    }
-
+    if (!response.ok) throw new Error(data.error || data.reply || ("Request failed (" + response.status + ")"));
     addMessage(data.reply || "No response received.", "bot");
-
     if (data.usage) {
       const count = Number(data.usage.chat_count ?? data.usage.chatCount);
-      const limit = Number(
-        data.usage.daily_limit ?? data.usage.dailyLimit ?? dailyLimit
-      );
-
+      const limit = Number(data.usage.daily_limit ?? data.usage.dailyLimit ?? dailyLimit);
       if (Number.isFinite(count)) {
-        $("usageText").textContent =
-          "Daily chats: " + count + " / " + limit +
+        $("usageText").textContent = "Daily chats: " + count + " / " + limit +
           " · Remaining: " + Math.max(0, limit - count);
-
-        $("usageDate").textContent =
-          "Date: " + (data.usage.usage_date || data.usage.usageDate || "IST");
+        $("usageDate").textContent = "Date: " + (data.usage.usage_date || data.usage.usageDate || "IST");
       }
-    } else {
-      await refreshUsage();
-    }
+    } else await refreshUsage();
 
-    if (data.pdf && data.pdf.data) {
+    if (data.pdf?.data) {
       const raw = atob(data.pdf.data);
       const bytes = new Uint8Array(raw.length);
-
-      for (let i = 0; i < raw.length; i++) {
-        bytes[i] = raw.charCodeAt(i);
-      }
-
-      const blob = new Blob(
-        [bytes],
-        { type: data.pdf.mimeType || "application/pdf" }
-      );
-
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      const blob = new Blob([bytes], { type: data.pdf.mimeType || "application/pdf" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = data.pdf.filename || "singam-document.pdf";
-
       document.body.appendChild(link);
       link.click();
       link.remove();
-
       setTimeout(() => URL.revokeObjectURL(url), 60000);
       addMessage("PDF generated and downloaded: " + link.download, "bot");
     }
-
     speak(data.reply || "");
-
     selectedFile = null;
     $("fileInput").value = "";
     $("attachmentPreview").textContent = "No attachment";
-
   } catch (error) {
-    if (waitingBubble && waitingBubble.isConnected) {
-      waitingBubble.remove();
-    }
-
+    if (waitingBubble?.isConnected) waitingBubble.remove();
     addMessage("Error: " + (error.message || "Something went wrong."), "bot");
   } finally {
     busy = false;
@@ -661,88 +622,335 @@ async function sendMessage(forcedPrompt = null) {
   }
 }
 
+/* Repair History API: requires matching authenticated server endpoints. */
+function formatStatus(status) {
+  return ({
+    pending: "Pending",
+    in_progress: "In progress",
+    completed: "Completed",
+    unable_to_repair: "Unable to repair"
+  })[status] || status || "Pending";
+}
+function formatDate(value) {
+  if (!value) return "Date unavailable";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+}
+function createElement(tag, className, text) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = text;
+  return element;
+}
+function getRecordId(record) {
+  return record.id || record.repair_id || "";
+}
+function renderHistory() {
+  const list = $("historyList");
+  list.replaceChildren();
+  const query = $("historySearch").value.trim().toLowerCase();
+  const status = $("historyStatus").value;
+  const filtered = repairRecords.filter(record => {
+    const combined = [
+      record.report_number, record.customer_name, record.device_type,
+      record.brand_model, record.complaint, record.diagnosis
+    ].join(" ").toLowerCase();
+    return (!query || combined.includes(query)) && (!status || record.status === status);
+  });
+  if (!filtered.length) {
+    list.appendChild(createElement("div", "empty",
+      repairRecords.length ? "No records match your search." : "No repair records saved yet."));
+    return;
+  }
+  for (const record of filtered) {
+    const card = createElement("article", "repair-card");
+    const title = createElement("h3", "", record.report_number || "Repair record");
+    card.appendChild(title);
+    const meta = createElement("div", "repair-meta");
+    meta.appendChild(createElement("span", "pill " + (VALID_STATUSES.includes(record.status) ? record.status : "pending"), formatStatus(record.status)));
+    meta.appendChild(createElement("span", "pill", record.device_type || "Device not specified"));
+    meta.appendChild(createElement("span", "pill", formatDate(record.created_at)));
+    card.appendChild(meta);
+    if (record.customer_name) card.appendChild(createElement("p", "small", "Customer: " + record.customer_name));
+    if (record.brand_model) card.appendChild(createElement("p", "small", "Model: " + record.brand_model));
+    card.appendChild(createElement("p", "small", "Complaint: " + (record.complaint || "Not specified")));
+    const actions = createElement("div", "btnrow");
+    const view = createElement("button", "btn primary", "View report");
+    view.type = "button";
+    view.addEventListener("click", () => openRepairDetails(record));
+    actions.appendChild(view);
+    const edit = createElement("button", "btn", "Edit status/details");
+    edit.type = "button";
+    edit.addEventListener("click", () => editRepair(record));
+    actions.appendChild(edit);
+    const del = createElement("button", "btn danger", "Delete");
+    del.type = "button";
+    del.addEventListener("click", () => deleteRepair(record));
+    actions.appendChild(del);
+    card.appendChild(actions);
+    list.appendChild(card);
+  }
+}
+async function loadRepairHistory() {
+  if (!currentSession || repairBusy) return;
+  repairBusy = true;
+  $("historyRefreshBtn").disabled = true;
+  setHistoryMessage("Loading your repair history...", true);
+  try {
+    const data = await apiFetch("/api/repairs");
+    repairRecords = Array.isArray(data) ? data :
+      (Array.isArray(data.repairs) ? data.repairs :
+      (Array.isArray(data.records) ? data.records : []));
+    renderHistory();
+    setHistoryMessage("Loaded " + repairRecords.length + " repair record(s).", true);
+  } catch (error) {
+    setHistoryMessage("Could not load repair history: " + error.message +
+      ". Ensure the Repair History API is implemented in server.js.");
+    $("historyList").replaceChildren(createElement("div", "empty", "Repair History API is not available yet."));
+  } finally {
+    repairBusy = false;
+    $("historyRefreshBtn").disabled = false;
+  }
+}
+function buildReportText(record) {
+  return [
+    "SINGAM TECHNICIAN AI — REPAIR REPORT",
+    "Report number: " + (record.report_number || "Not assigned"),
+    "Created: " + formatDate(record.created_at),
+    "Customer: " + (record.customer_name || "Not provided"),
+    "Device: " + (record.device_type || "Not specified"),
+    "Brand / Model: " + (record.brand_model || "Not provided"),
+    "Status: " + formatStatus(record.status),
+    "Complaint:\n" + (record.complaint || "Not provided"),
+    "Diagnosis / Findings:\n" + (record.diagnosis || "Not provided"),
+    "Repair actions:\n" + (record.repair_actions || "Not provided"),
+    "Parts used:\n" + (record.parts_used || "Not provided"),
+    "Cost: " + (record.cost == null ? "Not provided" : record.cost),
+    "",
+    "Generated by SINGAM Technician AI. Verify technical findings before use."
+  ].join("\n\n");
+}
+function openRepairDetails(record) {
+  activeRepair = record;
+  $("repairDetailContent").textContent = record.report_text || buildReportText(record);
+  $("detailMessage").textContent = "Report: " + (record.report_number || getRecordId(record));
+  $("repairDetailPanel").classList.remove("hidden");
+  $("repairDetailPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function downloadTextPdfFallback(record) {
+  const content = record.report_text || buildReportText(record);
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = (record.report_number || "singam-repair-report").replace(/[^a-z0-9_-]/gi, "_") + ".txt";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  $("detailMessage").textContent = "PDF endpoint unavailable. Downloaded a text report instead.";
+}
+async function downloadRepairPdf() {
+  if (!activeRepair) return;
+  const id = getRecordId(activeRepair);
+  if (!id) return downloadTextPdfFallback(activeRepair);
+  $("downloadRepairPdfBtn").disabled = true;
+  try {
+    const token = await getToken();
+    const response = await fetch("/api/repairs/" + encodeURIComponent(id) + "/pdf", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    if (!response.ok) {
+      let message = "PDF download endpoint is not available.";
+      try {
+        const data = await response.json();
+        message = data.error || message;
+      } catch (_) {}
+      throw new Error(message);
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = (activeRepair.report_number || "singam-repair-report") + ".pdf";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    $("detailMessage").textContent = "PDF downloaded successfully.";
+  } catch (error) {
+    $("detailMessage").textContent = error.message + " Downloading a text version instead.";
+    downloadTextPdfFallback(activeRepair);
+  } finally {
+    $("downloadRepairPdfBtn").disabled = false;
+  }
+}
+function editRepair(record) {
+  activeRepair = record;
+  $("customerName").value = record.customer_name || "";
+  $("deviceType").value = record.device_type || "";
+  $("brandModel").value = record.brand_model || "";
+  $("complaint").value = record.complaint || "";
+  $("diagnosis").value = record.diagnosis || "";
+  $("repairActions").value = record.repair_actions || "";
+  $("partsUsed").value = record.parts_used || "";
+  $("repairCost").value = record.cost ?? "";
+  $("repairStatus").value = VALID_STATUSES.includes(record.status) ? record.status : "pending";
+  $("saveRepairBtn").textContent = "Update Repair Record";
+  $("repairFormPanel").dataset.editId = getRecordId(record);
+  setRepairFormMessage("Editing " + (record.report_number || "repair record"), true);
+  showPage("new");
+  $("repairFormPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function resetRepairFormState() {
+  $("repairFormPanel").dataset.editId = "";
+  $("saveRepairBtn").textContent = "Save Repair Record";
+  activeRepair = null;
+  setRepairFormMessage("");
+}
+async function saveRepair(event) {
+  event.preventDefault();
+  if (repairBusy) return;
+  const costText = $("repairCost").value.trim();
+  const cost = costText === "" ? null : Number(costText);
+  if (cost !== null && (!Number.isFinite(cost) || cost < 0)) {
+    return setRepairFormMessage("Enter a valid non-negative cost.");
+  }
+  const record = {
+    customer_name: $("customerName").value.trim() || null,
+    device_type: $("deviceType").value.trim(),
+    brand_model: $("brandModel").value.trim() || null,
+    complaint: $("complaint").value.trim(),
+    diagnosis: $("diagnosis").value.trim() || null,
+    repair_actions: $("repairActions").value.trim() || null,
+    parts_used: $("partsUsed").value.trim() || null,
+    cost,
+    status: $("repairStatus").value
+  };
+  if (!record.device_type || !record.complaint) {
+    return setRepairFormMessage("Device type and customer complaint are required.");
+  }
+  const editId = $("repairFormPanel").dataset.editId;
+  repairBusy = true;
+  $("saveRepairBtn").disabled = true;
+  setRepairFormMessage(editId ? "Updating record..." : "Saving record...", true);
+  try {
+    const data = await apiFetch(editId ? "/api/repairs/" + encodeURIComponent(editId) : "/api/repairs", {
+      method: editId ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(record)
+    });
+    const saved = data.repair || data.record || data;
+    setRepairFormMessage(editId ? "Repair record updated." : "Repair record saved.", true);
+    $("repairForm").reset();
+    resetRepairFormState();
+    setRepairFormMessage("Repair record saved successfully.", true);
+    if (saved && getRecordId(saved)) activeRepair = saved;
+    await loadRepairHistory();
+    showPage("history");
+  } catch (error) {
+    setRepairFormMessage("Could not save record: " + error.message +
+      ". Ensure server.js has POST/PATCH /api/repairs endpoints.");
+  } finally {
+    repairBusy = false;
+    $("saveRepairBtn").disabled = false;
+  }
+}
+async function deleteRepair(record) {
+  const id = getRecordId(record);
+  if (!id) return setHistoryMessage("This record has no ID and cannot be deleted.");
+  if (!confirm("Delete " + (record.report_number || "this repair record") + "? This cannot be undone.")) return;
+  try {
+    await apiFetch("/api/repairs/" + encodeURIComponent(id), { method: "DELETE" });
+    setHistoryMessage("Repair record deleted.", true);
+    if (activeRepair && getRecordId(activeRepair) === id) {
+      activeRepair = null;
+      $("repairDetailPanel").classList.add("hidden");
+    }
+    await loadRepairHistory();
+  } catch (error) {
+    setHistoryMessage("Could not delete record: " + error.message);
+  }
+}
+async function deleteRepairDetail() {
+  if (!activeRepair) return;
+  await deleteRepair(activeRepair);
+}
 $("authForm").addEventListener("submit", signIn);
 $("signUpBtn").addEventListener("click", signUp);
 $("signOutBtn").addEventListener("click", signOut);
 $("sendBtn").addEventListener("click", () => sendMessage());
-
 $("messageInput").addEventListener("keydown", event => {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
   }
 });
-
 document.querySelectorAll(".suggestion").forEach(button => {
   button.addEventListener("click", () => sendMessage(button.dataset.prompt));
 });
-
 $("voiceToggleBtn").addEventListener("click", () => {
   voiceEnabled = !voiceEnabled;
-
-  $("voiceToggleBtn").textContent =
-    voiceEnabled ? "🔊 Voice: ON" : "🔇 Voice: OFF";
-
-  if (!voiceEnabled && "speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-  }
+  $("voiceToggleBtn").textContent = voiceEnabled ? "🔊 Voice: ON" : "🔇 Voice: OFF";
+  if (!voiceEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
 });
-
 $("stopVoiceBtn").addEventListener("click", () => {
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-  }
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
 });
-
 $("voiceInputBtn").addEventListener("click", () => {
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
-    addMessage(
-      "Voice input is not supported by this browser. Try Chrome and allow microphone access.",
-      "bot"
-    );
+    addMessage("Voice input is not supported by this browser. Try Chrome and allow microphone access.", "bot");
     return;
   }
-
   if (recognition) {
     recognition.stop();
     recognition = null;
     $("voiceInputBtn").textContent = "🎙 Voice Input";
     return;
   }
-
   recognition = new SpeechRecognition();
   recognition.lang = "en-US";
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
-
-  recognition.onstart = () => {
-    $("voiceInputBtn").textContent = "⏹ Stop Listening";
-  };
-
+  recognition.onstart = () => $("voiceInputBtn").textContent = "⏹ Stop Listening";
   recognition.onresult = event => {
     $("messageInput").value = event.results[0][0].transcript;
     $("messageInput").focus();
   };
-
-  recognition.onerror = event => {
-    addMessage("Voice input error: " + event.error, "bot");
-  };
-
+  recognition.onerror = event => addMessage("Voice input error: " + event.error, "bot");
   recognition.onend = () => {
     recognition = null;
     $("voiceInputBtn").textContent = "🎙 Voice Input";
   };
-
-  try {
-    recognition.start();
-  } catch (error) {
+  try { recognition.start(); }
+  catch (error) {
     recognition = null;
     addMessage("Could not start microphone: " + error.message, "bot");
   }
 });
+
+$("chatTab").addEventListener("click", () => showPage("chat"));
+$("historyTab").addEventListener("click", () => showPage("history"));
+$("newReportTab").addEventListener("click", () => {
+  $("repairForm").reset();
+  resetRepairFormState();
+  showPage("new");
+});
+$("historyRefreshBtn").addEventListener("click", loadRepairHistory);
+$("historySearchBtn").addEventListener("click", renderHistory);
+$("historySearch").addEventListener("input", renderHistory);
+$("historyStatus").addEventListener("change", renderHistory);
+$("repairForm").addEventListener("submit", saveRepair);
+$("resetRepairBtn").addEventListener("click", () => {
+  setTimeout(resetRepairFormState, 0);
+});
+$("closeDetailBtn").addEventListener("click", () => $("repairDetailPanel").classList.add("hidden"));
+$("downloadRepairPdfBtn").addEventListener("click", downloadRepairPdf);
+$("editRepairBtn").addEventListener("click", () => {
+  if (activeRepair) editRepair(activeRepair);
+});
+$("deleteRepairDetailBtn").addEventListener("click", deleteRepairDetail);
 
 loadConfig();
 </script>

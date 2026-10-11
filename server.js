@@ -4,6 +4,7 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 const pdfParse = require("pdf-parse");
 
 const app = express();
@@ -133,6 +134,51 @@ function isCreatorQuestion(command) {
   );
 }
 
+// OCR fallback for scanned/image-only PDFs.
+// Uses dynamic import because Scribe.js is an ES module.
+async function extractScannedPdfText(pdfBuffer) {
+  const tempPdfPath = path.join(
+    os.tmpdir(),
+    `singam-ocr-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}.pdf`
+  );
+
+  let scribe;
+
+  try {
+    fs.writeFileSync(tempPdfPath, pdfBuffer);
+
+    const scribeModule = await import("scribe.js-ocr");
+    scribe = scribeModule.default;
+
+    const extractedText = await scribe.extractText(
+      [tempPdfPath],
+      ["eng"]
+    );
+
+    return typeof extractedText === "string"
+      ? extractedText.trim()
+      : "";
+  } finally {
+    if (scribe) {
+      try {
+        await scribe.terminate();
+      } catch (error) {
+        console.error("OCR cleanup error:", error.message);
+      }
+    }
+
+    try {
+      if (fs.existsSync(tempPdfPath)) {
+        fs.unlinkSync(tempPdfPath);
+      }
+    } catch (error) {
+      console.error("Temporary PDF cleanup error:", error.message);
+    }
+  }
+}
+
 // Main AI endpoint
 app.post("/ask", async (req, res) => {
   try {
@@ -200,7 +246,7 @@ app.post("/ask", async (req, res) => {
       imageDataUrl = `data:${image.mimeType};base64,${image.data}`;
     }
 
-    // Extract text from uploaded PDF
+    // Extract text from uploaded PDF, using OCR if needed
     let documentText = "";
     let documentName = "";
 
@@ -228,6 +274,11 @@ app.post("/ask", async (req, res) => {
         });
       }
 
+      documentName =
+        typeof pdf.filename === "string"
+          ? path.basename(pdf.filename).slice(0, 150)
+          : "uploaded-document.pdf";
+
       try {
         const parsedPDF = await pdfParse(pdfBuffer);
 
@@ -239,29 +290,39 @@ app.post("/ask", async (req, res) => {
 
         documentText = (parsedPDF.text || "").trim();
 
+        // If no selectable text exists, try OCR
         if (!documentText) {
-          return res.json({
-            reply: "I couldn't extract readable text from this PDF. It may be a scanned document or image-only PDF. OCR support is not enabled yet."
-          });
+          console.log("Scanned PDF detected. Starting OCR...");
+
+          try {
+            documentText = await extractScannedPdfText(pdfBuffer);
+            console.log("OCR processing completed.");
+          } catch (ocrError) {
+            console.error("PDF OCR error:", ocrError);
+
+            return res.status(400).json({
+              reply: "SINGAM couldn't process this scanned PDF. Please try a clearer PDF with fewer pages."
+            });
+          }
+
+          if (!documentText) {
+            return res.json({
+              reply: "OCR couldn't recognize readable text in this PDF. Please try a clearer scan."
+            });
+          }
         }
-
-        if (documentText.length > MAX_PDF_CHARS) {
-          documentText =
-            documentText.slice(0, MAX_PDF_CHARS) +
-            "\n\n[Document text shortened because of the current processing limit.]";
-        }
-
-        documentName =
-          typeof pdf.filename === "string"
-            ? path.basename(pdf.filename).slice(0, 150)
-            : "uploaded-document.pdf";
-
       } catch (error) {
-        console.error("PDF extraction error:", error.message);
+        console.error("PDF extraction error:", error);
 
         return res.status(400).json({
           reply: "SINGAM couldn't read this PDF. Please try another PDF."
         });
+      }
+
+      if (documentText.length > MAX_PDF_CHARS) {
+        documentText =
+          documentText.slice(0, MAX_PDF_CHARS) +
+          "\n\n[Document text shortened because of the current processing limit.]";
       }
     }
 

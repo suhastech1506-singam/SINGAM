@@ -5,539 +5,124 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SINGAM | Technician AI</title>
-
 <style>
-* {
-  box-sizing: border-box;
-}
-
-:root {
-  --bg: #080b10;
-  --panel: #101720;
-  --panel2: #151f2b;
-  --border: #25313d;
-  --cyan: #54e7f5;
-  --text: #edf5fb;
-  --muted: #8b9aa8;
-  --green: #5cf2a5;
-  --red: #ff7474;
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--text);
-  font-family: Arial, sans-serif;
-}
-
-button, input, textarea {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-.app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-header {
-  height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 22px;
-  border-bottom: 1px solid var(--border);
-  background: #0c1118;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.logo {
-  width: 42px;
-  height: 42px;
-  border: 1px solid var(--cyan);
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  color: var(--cyan);
-  font-size: 23px;
-  font-weight: bold;
-  box-shadow: 0 0 16px #54e7f51a;
-}
-
-.brand h1 {
-  font-size: 19px;
-  margin: 0 0 4px;
-  letter-spacing: 1.5px;
-}
-
-.brand p {
-  margin: 0;
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.status {
-  font-size: 12px;
-  color: var(--green);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.status-dot {
-  width: 7px;
-  height: 7px;
-  background: var(--green);
-  border-radius: 50%;
-}
-
-main {
-  width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 26px 18px 18px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.welcome {
-  text-align: center;
-  margin: 12px 0 24px;
-}
-
-.welcome-icon {
-  width: 66px;
-  height: 66px;
-  margin: auto;
-  display: grid;
-  place-items: center;
-  border: 1px solid #28535c;
-  border-radius: 20px;
-  color: var(--cyan);
-  font-size: 30px;
-  background: #10232b;
-}
-
-.welcome h2 {
-  margin: 15px 0 8px;
-  font-size: clamp(23px, 4vw, 32px);
-}
-
-.welcome p {
-  margin: 0 auto;
-  color: var(--muted);
-  line-height: 1.6;
-  font-size: 14px;
-  max-width: 560px;
-}
-
-.capabilities {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.capability {
-  padding: 13px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-
-.capability strong {
-  display: block;
-  font-size: 13px;
-  margin-bottom: 6px;
-}
-
-.capability span {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.chat {
-  flex: 1;
-  min-height: 180px;
-  max-height: 45vh;
-  overflow-y: auto;
-  padding: 5px 2px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  scroll-behavior: smooth;
-}
-
-.message {
-  max-width: 88%;
-  padding: 13px 15px;
-  border-radius: 14px;
-  font-size: 14px;
-  line-height: 1.65;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.message.user {
-  align-self: flex-end;
-  background: #15323a;
-  border: 1px solid #28535c;
-}
-
-.message.ai {
-  align-self: flex-start;
-  background: var(--panel);
-  border: 1px solid var(--border);
-}
-
-.message-label {
-  display: block;
-  color: var(--cyan);
-  font-size: 10px;
-  letter-spacing: 1px;
-  font-weight: bold;
-  margin-bottom: 7px;
-}
-
-.message img {
-  display: block;
-  max-width: 100%;
-  max-height: 240px;
-  border-radius: 9px;
-  margin-bottom: 8px;
-}
-
-.typing {
-  color: var(--muted);
-  font-size: 13px;
-  padding: 8px 2px;
-}
-
-.composer {
-  position: relative;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 12px;
-}
-
-.preview {
-  display: none;
-  align-items: center;
-  gap: 12px;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #0b1118;
-}
-
-.preview img {
-  width: 68px;
-  height: 68px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.preview-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.preview-info strong {
-  display: block;
-  font-size: 13px;
-  overflow-wrap: anywhere;
-}
-
-.preview-info span {
-  display: block;
-  color: var(--muted);
-  font-size: 11px;
-  margin-top: 5px;
-}
-
-.remove-btn {
-  background: #2b171b;
-  color: var(--red);
-  border: 1px solid #553038;
-  border-radius: 8px;
-  padding: 8px 10px;
-}
-
-.input-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 9px;
-}
-
-.upload-btn, .send-btn {
-  flex-shrink: 0;
-  height: 43px;
-  border-radius: 11px;
-}
-
-.upload-btn {
-  width: 43px;
-  border: 1px solid var(--border);
-  background: var(--panel2);
-  color: var(--cyan);
-  font-size: 25px;
-}
-
-.upload-btn:hover {
-  border-color: var(--cyan);
-}
-
-textarea {
-  min-width: 0;
-  flex: 1;
-  resize: none;
-  max-height: 140px;
-  min-height: 43px;
-  padding: 12px 8px;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text);
-  line-height: 1.4;
-}
-
-textarea::placeholder {
-  color: #748391;
-}
-
-.send-btn {
-  padding: 0 17px;
-  border: none;
-  background: var(--cyan);
-  color: #061015;
-  font-weight: bold;
-}
-
-.send-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.hint {
-  color: var(--muted);
-  text-align: center;
-  font-size: 11px;
-  line-height: 1.6;
-  margin: 10px 0 0;
-}
-
-.quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin: 15px 0 4px;
-}
-
-.quick-btn {
-  background: transparent;
-  color: #c0ceda;
-  border: 1px solid var(--border);
-  border-radius: 30px;
-  padding: 9px 13px;
-  font-size: 12px;
-}
-
-.quick-btn:hover {
-  color: var(--cyan);
-  border-color: var(--cyan);
-}
-
-footer {
-  padding: 13px;
-  border-top: 1px solid var(--border);
-  color: #647482;
-  font-size: 11px;
-  text-align: center;
-}
-
-@media (max-width: 600px) {
-  header {
-    height: 64px;
-    padding: 0 13px;
-  }
-
-  .brand h1 {
-    font-size: 16px;
-  }
-
-  .brand p {
-    font-size: 10px;
-  }
-
-  .status {
-    font-size: 10px;
-  }
-
-  main {
-    padding: 18px 12px 14px;
-  }
-
-  .capabilities {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .capability {
-    padding: 11px;
-  }
-
-  .chat {
-    max-height: 40vh;
-  }
-
-  .message {
-    max-width: 95%;
-  }
-
-  .send-btn {
-    padding: 0 12px;
-  }
+*{box-sizing:border-box}
+:root{--bg:#080b10;--panel:#101720;--panel2:#151f2b;--border:#25313d;--cyan:#54e7f5;--text:#edf5fb;--muted:#8b9aa8;--green:#5cf2a5;--red:#ff7474}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh;display:flex;flex-direction:column}
+header{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid var(--border);background:#0c1118}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border:1px solid var(--cyan);border-radius:12px;display:grid;place-items:center;color:var(--cyan);font-size:23px;font-weight:bold;box-shadow:0 0 16px #54e7f51a}
+.brand h1{font-size:19px;margin:0 0 4px;letter-spacing:1.5px}
+.brand p{margin:0;font-size:11px;color:var(--muted)}
+.status{font-size:12px;color:var(--green);display:flex;align-items:center;gap:7px}
+.status-dot{width:7px;height:7px;background:var(--green);border-radius:50%}
+main{width:100%;max-width:1000px;margin:0 auto;padding:26px 18px 18px;flex:1;display:flex;flex-direction:column}
+.welcome{text-align:center;margin:12px 0 24px}
+.welcome-icon{width:66px;height:66px;margin:auto;display:grid;place-items:center;border:1px solid #28535c;border-radius:20px;color:var(--cyan);font-size:30px;background:#10232b}
+.welcome h2{margin:15px 0 8px;font-size:clamp(23px,4vw,32px)}
+.welcome p{margin:0 auto;color:var(--muted);line-height:1.6;font-size:14px;max-width:560px}
+.capabilities{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.capability{padding:13px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
+.capability strong{display:block;font-size:13px;margin-bottom:6px}
+.capability span{color:var(--muted);font-size:12px;line-height:1.5}
+.chat{flex:1;min-height:180px;max-height:45vh;overflow-y:auto;padding:5px 2px 18px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+.message{max-width:88%;padding:13px 15px;border-radius:14px;font-size:14px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.message.user{align-self:flex-end;background:#15323a;border:1px solid #28535c}
+.message.ai{align-self:flex-start;background:var(--panel);border:1px solid var(--border)}
+.message-label{display:block;color:var(--cyan);font-size:10px;letter-spacing:1px;font-weight:bold;margin-bottom:7px}
+.message img{display:block;max-width:100%;max-height:240px;border-radius:9px;margin-bottom:8px}
+.typing{color:var(--muted);font-size:13px;padding:8px 2px}
+.composer{position:relative;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:12px}
+.preview{display:none;align-items:center;gap:12px;padding:8px;margin-bottom:10px;border:1px solid var(--border);border-radius:10px;background:#0b1118}
+.preview img{width:68px;height:68px;object-fit:cover;border-radius:8px}
+.preview-info{flex:1;min-width:0}
+.preview-info strong{display:block;font-size:13px;overflow-wrap:anywhere}
+.preview-info span{display:block;color:var(--muted);font-size:11px;margin-top:5px}
+.remove-btn{background:#2b171b;color:var(--red);border:1px solid #553038;border-radius:8px;padding:8px 10px}
+.input-row{display:flex;align-items:flex-end;gap:9px}
+.upload-btn,.send-btn{flex-shrink:0;height:43px;border-radius:11px}
+.upload-btn{width:43px;border:1px solid var(--border);background:var(--panel2);color:var(--cyan);font-size:25px}
+.upload-btn:hover{border-color:var(--cyan)}
+textarea{min-width:0;flex:1;resize:none;max-height:140px;min-height:43px;padding:12px 8px;background:transparent;border:none;outline:none;color:var(--text);line-height:1.4}
+textarea::placeholder{color:#748391}
+.send-btn{padding:0 17px;border:none;background:var(--cyan);color:#061015;font-weight:bold}
+.send-btn:disabled{opacity:.45;cursor:not-allowed}
+.hint{color:var(--muted);text-align:center;font-size:11px;line-height:1.6;margin:10px 0 0}
+.quick-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:15px 0 4px}
+.quick-btn{background:transparent;color:#c0ceda;border:1px solid var(--border);border-radius:30px;padding:9px 13px;font-size:12px}
+.quick-btn:hover{color:var(--cyan);border-color:var(--cyan)}
+footer{padding:13px;border-top:1px solid var(--border);color:#647482;font-size:11px;text-align:center}
+@media(max-width:600px){
+header{height:64px;padding:0 13px}
+.brand h1{font-size:16px}
+.brand p{font-size:10px}
+.status{font-size:10px}
+main{padding:18px 12px 14px}
+.capabilities{grid-template-columns:1fr;gap:8px}
+.capability{padding:11px}
+.chat{max-height:40vh}
+.message{max-width:95%}
+.send-btn{padding:0 12px}
+.input-row{gap:6px}
+.upload-btn{width:38px}
 }
 </style>
 </head>
-
 <body>
 <div class="app">
+<header>
+  <div class="brand">
+    <div class="logo">S</div>
+    <div><h1>SINGAM</h1><p>TECHNICIAN AI COMMAND CENTER</p></div>
+  </div>
+  <div class="status"><span class="status-dot"></span>ASSISTANT READY</div>
+</header>
 
-  <header>
-    <div class="brand">
-      <div class="logo">S</div>
-      <div>
-        <h1>SINGAM</h1>
-        <p>TECHNICIAN AI COMMAND CENTER</p>
-      </div>
+<main>
+  <section class="welcome" id="welcome">
+    <div class="welcome-icon">⌘</div>
+    <h2>Welcome to SINGAM</h2>
+    <p>Your AI technical assistant. Ask questions, describe an appliance problem, or upload an image or PDF for analysis.</p>
+  </section>
+
+  <section class="capabilities" id="capabilities">
+    <div class="capability"><strong>01 / Technical Support</strong><span>Ask questions about technical problems.</span></div>
+    <div class="capability"><strong>02 / Image Analysis</strong><span>Upload a photo to investigate visible issues.</span></div>
+    <div class="capability"><strong>03 / PDF Analysis</strong><span>Upload a PDF to summarize and understand its contents.</span></div>
+  </section>
+
+  <section class="chat" id="chat" aria-live="polite"></section>
+  <div class="typing" id="typing" hidden>SINGAM is processing your request...</div>
+
+  <section class="composer">
+    <div class="preview" id="preview">
+      <img id="previewImage" src="" alt="Selected image preview">
+      <div class="preview-info"><strong id="fileName">Selected file</strong><span id="fileSize"></span></div>
+      <button class="remove-btn" id="removeImage" type="button">Remove</button>
     </div>
 
-    <div class="status">
-      <span class="status-dot"></span>
-      ASSISTANT READY
+    <div class="input-row">
+      <button class="upload-btn" id="uploadBtn" type="button" aria-label="Upload image or PDF" title="Upload an image or PDF">+</button>
+      <input type="file" id="imageInput" accept=".pdf,application/pdf,image/*" hidden>
+      <textarea id="command" rows="1" placeholder="Ask SINGAM or ask a question about a PDF..." aria-label="Message SINGAM"></textarea>
+      <button class="send-btn" id="sendBtn" type="button">SEND</button>
     </div>
-  </header>
+    <p class="hint">Enter to send · Shift + Enter for a new line<br>PDF text extraction works for text-based PDFs. Scanned PDFs may require OCR.</p>
+  </section>
 
-  <main>
-    <section class="welcome" id="welcome">
-      <div class="welcome-icon">⌘</div>
-      <h2>Welcome to SINGAM</h2>
-      <p>
-        Your AI technical assistant. Ask questions, describe an
-        appliance problem, or upload an image for visual analysis.
-      </p>
-    </section>
+  <div class="quick-actions">
+    <button class="quick-btn" data-prompt="Help me troubleshoot an AC that is not cooling.">AC problem</button>
+    <button class="quick-btn" data-prompt="Help me troubleshoot a washing machine that is not draining.">Washing machine</button>
+    <button class="quick-btn" data-prompt="Help me troubleshoot a refrigerator that is not cooling.">Refrigerator</button>
+    <button class="quick-btn" data-prompt="Explain how to identify visible damage in an electronic circuit board photo.">Circuit board</button>
+    <button class="quick-btn" data-prompt="Summarize the main points of the uploaded PDF.">Summarize PDF</button>
+  </div>
+</main>
 
-    <section class="capabilities" id="capabilities">
-      <div class="capability">
-        <strong>01 / Technical Support</strong>
-        <span>Ask questions about technical problems.</span>
-      </div>
-
-      <div class="capability">
-        <strong>02 / Image Analysis</strong>
-        <span>Upload a photo to investigate visible issues.</span>
-      </div>
-
-      <div class="capability">
-        <strong>03 / Troubleshooting</strong>
-        <span>Explore possible causes and next checks.</span>
-      </div>
-    </section>
-
-    <section class="chat" id="chat" aria-live="polite"></section>
-
-    <div class="typing" id="typing" hidden>
-      SINGAM is processing your request...
-    </div>
-
-    <section class="composer">
-      <div class="preview" id="preview">
-        <img id="previewImage" src="" alt="Selected image preview">
-
-        <div class="preview-info">
-          <strong id="fileName">Selected image</strong>
-          <span id="fileSize"></span>
-        </div>
-
-        <button class="remove-btn" id="removeImage" type="button">
-          Remove
-        </button>
-      </div>
-
-      <div class="input-row">
-        <button
-          class="upload-btn"
-          id="uploadBtn"
-          type="button"
-          aria-label="Upload image"
-          title="Upload an image"
-        >+</button>
-
-        <input
-          type="file"
-          id="imageInput"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          hidden
-        >
-
-        <textarea
-          id="command"
-          rows="1"
-          placeholder="Ask SINGAM or describe a hardware problem..."
-          aria-label="Message SINGAM"
-        ></textarea>
-
-        <button class="send-btn" id="sendBtn" type="button">
-          SEND
-        </button>
-      </div>
-
-      <p class="hint">
-        Enter to send · Shift + Enter for a new line<br>
-        Image diagnosis can be uncertain. Verify important faults
-        before attempting repairs.
-      </p>
-    </section>
-
-    <div class="quick-actions">
-      <button class="quick-btn" data-prompt="Help me troubleshoot an AC that is not cooling.">
-        AC problem
-      </button>
-
-      <button class="quick-btn" data-prompt="Help me troubleshoot a washing machine that is not draining.">
-        Washing machine
-      </button>
-
-      <button class="quick-btn" data-prompt="Help me troubleshoot a refrigerator that is not cooling.">
-        Refrigerator
-      </button>
-
-      <button class="quick-btn" data-prompt="Explain how to identify visible damage in an electronic circuit board photo.">
-        Circuit board
-      </button>
-    </div>
-  </main>
-
-  <footer>
-    SINGAM TECHNICIAN AI · Technical assistance prototype
-  </footer>
+<footer>SINGAM TECHNICIAN AI · Technical assistance prototype</footer>
 </div>
 
 <script>
@@ -558,7 +143,6 @@ const capabilities = document.getElementById("capabilities");
 let selectedFile = null;
 let previewURL = null;
 let busy = false;
-
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 uploadBtn.addEventListener("click", () => {
@@ -567,27 +151,36 @@ uploadBtn.addEventListener("click", () => {
 
 imageInput.addEventListener("change", () => {
   const file = imageInput.files[0];
-
   if (!file) return;
 
-  if (!file.type.startsWith("image/")) {
-    alert("Please select an image file.");
+  const isImage = ["image/jpeg","image/png","image/webp","image/gif"].includes(file.type);
+  const isPDF = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+  if (!isImage && !isPDF) {
+    alert("Please select a JPG, PNG, WEBP, GIF, or PDF file.");
     imageInput.value = "";
     return;
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    alert("Please select an image smaller than 5 MB.");
+    alert("Please select a file smaller than 5 MB.");
     imageInput.value = "";
     return;
   }
 
-  clearSelectedImage();
-
+  clearSelectedFile();
   selectedFile = file;
-  previewURL = URL.createObjectURL(file);
 
-  previewImage.src = previewURL;
+  if (isImage) {
+    previewURL = URL.createObjectURL(file);
+    previewImage.src = previewURL;
+    previewImage.style.display = "block";
+    previewImage.alt = "Selected image preview";
+  } else {
+    previewImage.removeAttribute("src");
+    previewImage.style.display = "none";
+  }
+
   fileName.textContent = file.name;
   fileSize.textContent = formatSize(file.size);
   preview.style.display = "flex";
@@ -599,19 +192,17 @@ function formatSize(bytes) {
     : (bytes / (1024 * 1024)).toFixed(2) + " MB";
 }
 
-function clearSelectedImage() {
-  if (previewURL) {
-    URL.revokeObjectURL(previewURL);
-  }
-
+function clearSelectedFile() {
+  if (previewURL) URL.revokeObjectURL(previewURL);
   previewURL = null;
   selectedFile = null;
   previewImage.removeAttribute("src");
+  previewImage.style.display = "block";
   preview.style.display = "none";
   imageInput.value = "";
 }
 
-removeImage.addEventListener("click", clearSelectedImage);
+removeImage.addEventListener("click", clearSelectedFile);
 
 function addMessage(role, text, imageURL = null) {
   welcome.style.display = "none";
@@ -623,13 +214,12 @@ function addMessage(role, text, imageURL = null) {
   const label = document.createElement("span");
   label.className = "message-label";
   label.textContent = role === "user" ? "YOU" : "SINGAM";
-
   message.appendChild(label);
 
   if (imageURL) {
     const image = document.createElement("img");
     image.src = imageURL;
-    image.alt = "Uploaded hardware image";
+    image.alt = "Uploaded image";
     message.appendChild(image);
   }
 
@@ -646,29 +236,24 @@ function addMessage(role, text, imageURL = null) {
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-
     reader.onload = () => {
       const result = reader.result;
 
       if (typeof result !== "string") {
-        reject(new Error("Could not read the image."));
+        reject(new Error("Could not read the selected file."));
         return;
       }
 
       const comma = result.indexOf(",");
-
       if (comma === -1) {
-        reject(new Error("Invalid image data."));
+        reject(new Error("Invalid file data."));
         return;
       }
 
       resolve(result.slice(comma + 1));
     };
 
-    reader.onerror = () => {
-      reject(new Error("Could not read the selected image."));
-    };
-
+    reader.onerror = () => reject(new Error("Could not read the selected file."));
     reader.readAsDataURL(file);
   });
 }
@@ -684,28 +269,36 @@ async function sendCommand() {
     return;
   }
 
-  let imageBase64 = null;
-  let imageMimeType = null;
+  let fileBase64 = null;
   let localPreviewURL = null;
+
+  const isPDF = !!file && (
+    file.type === "application/pdf" ||
+    file.name.toLowerCase().endsWith(".pdf")
+  );
+  const isImage = !!file && !isPDF;
 
   try {
     if (file) {
-      imageBase64 = await fileToBase64(file);
-      imageMimeType = file.type;
-      localPreviewURL = URL.createObjectURL(file);
+      fileBase64 = await fileToBase64(file);
+      if (isImage) localPreviewURL = URL.createObjectURL(file);
     }
   } catch (error) {
     alert(error.message);
     return;
   }
 
-  const displayText = command || "Please analyse this hardware image.";
+  let displayText = command;
+  if (!displayText && isPDF) displayText = "Please summarize this PDF document.";
+  else if (!displayText && isImage) displayText = "Please analyse this image.";
+
+  if (isPDF) displayText = "📄 " + file.name + "\n" + displayText;
 
   addMessage("user", displayText, localPreviewURL);
 
   commandInput.value = "";
   commandInput.style.height = "43px";
-  clearSelectedImage();
+  clearSelectedFile();
 
   busy = true;
   sendBtn.disabled = true;
@@ -713,45 +306,38 @@ async function sendCommand() {
   typing.hidden = false;
 
   try {
-    const payload = { command: displayText };
+    const payload = { command: command };
 
-    if (imageBase64) {
-      payload.image = {
-        data: imageBase64,
-        mimeType: imageMimeType
+    if (fileBase64 && isImage) {
+      payload.image = { data: fileBase64, mimeType: file.type };
+    } else if (fileBase64 && isPDF) {
+      payload.pdf = {
+        data: fileBase64,
+        mimeType: "application/pdf",
+        filename: file.name
       };
     }
 
     const response = await fetch("/ask", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
 
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(
-        data.error || data.reply || "Request failed with status " + response.status
-      );
+      throw new Error(data.reply || data.error || "Request failed with status " + response.status);
     }
 
-    if (data.reply) {
-      addMessage("ai", data.reply);
-    } else {
-      addMessage("ai", "The server returned no reply. Please try again.");
-    }
+    addMessage("ai", data.reply || "The server returned no reply. Please try again.");
   } catch (error) {
-    addMessage(
-      "ai",
+    addMessage("ai",
       "I could not complete the request. Please check your internet connection, server status, and AI API configuration.\n\nDetails: " +
       error.message
     );
   } finally {
     if (localPreviewURL) URL.revokeObjectURL(localPreviewURL);
-
     busy = false;
     sendBtn.disabled = false;
     uploadBtn.disabled = false;
@@ -771,8 +357,7 @@ commandInput.addEventListener("keydown", event => {
 
 commandInput.addEventListener("input", () => {
   commandInput.style.height = "43px";
-  commandInput.style.height =
-    Math.min(commandInput.scrollHeight, 140) + "px";
+  commandInput.style.height = Math.min(commandInput.scrollHeight, 140) + "px";
 });
 
 document.querySelectorAll(".quick-btn").forEach(button => {
@@ -780,11 +365,9 @@ document.querySelectorAll(".quick-btn").forEach(button => {
     commandInput.value = button.dataset.prompt;
     commandInput.focus();
     commandInput.style.height = "auto";
-    commandInput.style.height =
-      Math.min(commandInput.scrollHeight, 140) + "px";
+    commandInput.style.height = Math.min(commandInput.scrollHeight, 140) + "px";
   });
 });
-
 
 function testVoice() {
   if (!("speechSynthesis" in window)) {
@@ -802,16 +385,14 @@ function testVoice() {
   message.rate = 0.9;
   message.pitch = 0.7;
   message.volume = 1;
-
   message.onstart = () => console.log("SINGAM voice started");
   message.onend = () => console.log("SINGAM voice finished");
-  message.onerror = (event) =>
-    console.error("Voice error:", event.error);
+  message.onerror = event => console.error("Voice error:", event.error);
 
   window.speechSynthesis.speak(message);
 }
-window.testVoice = testVoice;
 
+window.testVoice = testVoice;
 </script>
 </body>
 </html>

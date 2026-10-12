@@ -1,162 +1,1220 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#071018">
-<title>SINGAM | Technician AI</title>
-<style>
-:root{--bg:#071018;--panel:#0d1924;--panel2:#101f2b;--line:#233847;--cyan:#55eaff;--cyan2:#19bfd2;--text:#eef8fc;--muted:#91a7b5;--good:#5de2a5;--warn:#ffca75;--bad:#ff7f91;--radius:18px;--shadow:0 18px 55px #0005}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 20% -10%,#113443 0,transparent 42%),var(--bg);color:var(--text);font:15px/1.5 Inter,Segoe UI,Arial,sans-serif;min-height:100vh}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.shell{max-width:1400px;margin:auto;padding:20px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,var(--cyan),#1595bd);display:grid;place-items:center;color:#04131b;font-weight:900;font-size:25px;box-shadow:0 0 28px #55eaff35}.brand h1{margin:0;font-size:21px;letter-spacing:.12em}.brand p{margin:2px 0 0;color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase}.top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.pill{border:1px solid var(--line);border-radius:999px;padding:7px 12px;color:var(--muted);font-size:12px}.layout{display:grid;grid-template-columns:245px minmax(0,1fr);gap:18px}.sidebar,.panel{background:linear-gradient(180deg,#10202c,#0b151e);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.sidebar{padding:15px;height:max-content;position:sticky;top:15px}.nav-title{color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.16em;padding:8px 10px}.nav-btn{width:100%;text-align:left;background:transparent;border:1px solid transparent;color:#b8cbd5;padding:12px;border-radius:12px;margin:3px 0;display:flex;align-items:center;gap:10px}.nav-btn:hover,.nav-btn.active{background:#15303e;border-color:#245265;color:var(--cyan)}.nav-icon{width:25px;text-align:center;font-size:17px}.sidebar-foot{border-top:1px solid var(--line);margin-top:18px;padding:15px 8px 5px;color:var(--muted);font-size:12px}.main{min-width:0;display:grid;gap:18px}.hero{padding:24px;background:linear-gradient(115deg,#123141,#0d1a25 72%);border:1px solid #285060;border-radius:var(--radius);position:relative;overflow:hidden}.hero:after{content:"";position:absolute;right:-35px;top:-65px;width:240px;height:240px;border:1px solid #55eaff25;border-radius:50%;box-shadow:0 0 0 25px #55eaff08,0 0 0 55px #55eaff05}.eyebrow{font-size:11px;color:var(--cyan);font-weight:800;letter-spacing:.18em;text-transform:uppercase}.hero h2{font-size:clamp(24px,3vw,36px);margin:7px 0}.hero p{color:#b2c7d2;max-width:650px;margin:0}.hero-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:17px}.stat{padding:9px 12px;border:1px solid #2a5362;border-radius:11px;background:#0717208a;font-size:12px;color:#d6e8ef}.panel{padding:20px;min-width:0}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:15px}.panel h3{margin:0;font-size:17px}.sub{color:var(--muted);font-size:12px;margin-top:4px}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.field{display:flex;flex-direction:column;gap:6px;min-width:0}.field.full{grid-column:1/-1}label{font-size:12px;color:#b9ccd5;font-weight:700}input,select,textarea{width:100%;border:1px solid #2b4352;background:#08141d;color:var(--text);border-radius:11px;padding:11px 12px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--cyan2);box-shadow:0 0 0 3px #19bfd21a}textarea{resize:vertical;min-height:88px}input::placeholder,textarea::placeholder{color:#647c8b}.btn{border:1px solid #2b4a5a;background:#132a37;color:var(--text);border-radius:11px;padding:10px 14px;font-weight:700;transition:.15s}.btn:hover{filter:brightness(1.15);transform:translateY(-1px)}.btn.primary{background:linear-gradient(135deg,var(--cyan),#21bdd3);border-color:transparent;color:#03151d}.btn.ghost{background:transparent}.btn.danger{border-color:#743443;color:#ffabb6;background:#351822}.btn.small{padding:7px 10px;font-size:12px}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.hidden{display:none!important}.notice{padding:11px 13px;border:1px solid var(--line);border-radius:11px;color:var(--muted);font-size:13px;margin-bottom:12px}.notice.error{border-color:#713545;color:#ffb0ba;background:#35172066}.notice.success{border-color:#27674e;color:#9bf0c6;background:#0c332466}.chatbox{height:min(52vh,520px);min-height:300px;overflow:auto;border:1px solid var(--line);border-radius:14px;background:#07121a;padding:15px;display:flex;flex-direction:column;gap:13px}.bubble{max-width:88%;padding:12px 14px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere}.bubble.user{align-self:flex-end;background:#123c4a;border:1px solid #236578}.bubble.assistant{align-self:flex-start;background:#12202b;border:1px solid #293e4b}.bubble .who{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan);margin-bottom:5px;font-weight:800}.bubble .body{white-space:pre-wrap}.composer{margin-top:12px;display:grid;gap:10px}.composer textarea{min-height:80px;max-height:200px}.attachbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.file-label{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--line);border-radius:10px;color:#bdd1db;font-size:12px;cursor:pointer}.file-label input{display:none}.preview{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;overflow-wrap:anywhere}.preview img{max-height:90px;max-width:120px;border-radius:9px;border:1px solid var(--line)}.suggestions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.suggestions button{border:1px solid #2a4554;background:#0c1b25;color:#b9d5e0;border-radius:999px;padding:7px 10px;font-size:12px}.table-tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.table-tools input{flex:1;min-width:170px}.repair-list{display:grid;gap:10px}.repair-card{border:1px solid var(--line);background:#091720;border-radius:13px;padding:14px}.repair-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.repair-card h4{margin:0 0 3px;font-size:15px}.repair-meta{font-size:12px;color:var(--muted);overflow-wrap:anywhere}.status{display:inline-flex;padding:4px 8px;border-radius:999px;border:1px solid #3b5665;color:#b9d7e4;font-size:10px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}.status.completed{border-color:#27674e;color:#8ce9b9}.status.in_progress{border-color:#7a6337;color:#ffdb91}.status.unable_to_repair{border-color:#753545;color:#ffabb7}.repair-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.detail-item{padding:12px;background:#08141c;border:1px solid var(--line);border-radius:11px;overflow-wrap:anywhere}.detail-item strong{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}.detail-item p{margin:0;white-space:pre-wrap}.auth-wrap{max-width:480px;margin:7vh auto}.auth-wrap .panel{padding:25px}.auth-tabs{display:flex;gap:8px;margin-bottom:18px}.auth-tabs button{flex:1}.usagebar{height:6px;border-radius:999px;background:#233744;overflow:hidden;margin-top:8px}.usagebar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan2),var(--good));transition:width .25s}.empty{padding:30px 15px;text-align:center;color:var(--muted);border:1px dashed #29404d;border-radius:13px}.toast{position:fixed;right:18px;bottom:18px;z-index:20;max-width:min(420px,calc(100vw - 36px));padding:13px 16px;border:1px solid #326071;border-radius:12px;background:#102632;box-shadow:var(--shadow);display:none}.toast.show{display:block}.footnote{text-align:center;color:#607785;font-size:11px;padding:8px}@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{position:static;display:flex;gap:5px;overflow:auto;padding:8px}.nav-title,.sidebar-foot{display:none}.nav-btn{width:auto;white-space:nowrap;margin:0;padding:10px}.nav-icon{display:none}.shell{padding:12px}.hero{padding:20px}}@media(max-width:560px){.topbar{align-items:flex-start}.brand h1{font-size:17px}.brand p{font-size:10px}.logo{width:40px;height:40px}.top-actions .pill{display:none}.panel{padding:14px}.grid2,.detail-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.chatbox{height:48vh;min-height:270px;padding:10px}.bubble{max-width:96%}.hero-stats{gap:6px}.stat{font-size:11px}.repair-top{align-items:flex-start}.repair-actions .btn{flex:1}.shell{padding:9px}.panel-head{flex-direction:column}.composer .row .btn{flex:1}.auth-wrap{margin:3vh auto}.hero:after{opacity:.35}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070b10">
+  <title>SINGAM | Technician AI</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg: #070b10;
+      --panel: #101720;
+      --panel2: #0b121a;
+      --border: #253441;
+      --cyan: #55eaff;
+      --text: #edf7ff;
+      --muted: #91a4b5;
+      --danger: #ff7474;
+      --success: #72efbd;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at top, #102331 0%, transparent 45%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .shell {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      flex-shrink: 0;
+      border: 1px solid #55eaff88;
+      border-radius: 14px;
+      background: #102a35;
+      color: var(--cyan);
+      font-size: 24px;
+      font-weight: 900;
+      box-shadow: 0 0 24px #55eaff18;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 2px;
+    }
+
+    .brand p,
+    .sub,
+    .muted {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .panel {
+      min-width: 0;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: linear-gradient(145deg, #101720, #0b121a);
+      box-shadow: 0 14px 44px #00000022;
+    }
+
+    .auth-wrap {
+      max-width: 520px;
+      padding-top: 7vh;
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 15px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      color: #d6e8f5;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      min-width: 0;
+      padding: 12px 13px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      outline: none;
+      background: #080f16;
+      color: var(--text);
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px #55eaff16;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #708596;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 15px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: #15212c;
+      color: var(--text);
+      font-weight: 700;
+      text-align: center;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .btn:hover {
+      border-color: #55eaff88;
+      background: #1a2c39;
+    }
+
+    .btn.primary {
+      border-color: var(--cyan);
+      background: var(--cyan);
+      color: #031017;
+    }
+
+    .btn.primary:hover {
+      background: #a0f4ff;
+    }
+
+    .btn.ghost {
+      border-color: transparent;
+      background: transparent;
+      color: var(--cyan);
+    }
+
+    .notice {
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: #0a131b;
+      color: var(--text);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .notice.success {
+      border-color: #72efbd66;
+      color: var(--success);
+    }
+
+    .notice.error {
+      border-color: #ff747466;
+      color: #ffaaaa;
+    }
+
+    .eyebrow {
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .footnote {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .shell {
+        padding: 14px;
+      }
+
+      .auth-wrap {
+        padding-top: 24px;
+      }
+
+      .panel {
+        padding: 17px;
+      }
+
+      .grid2 {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .field.full {
+        grid-column: auto;
+      }
+
+      .brand h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-<div id="authView" class="shell auth-wrap">
-  <div class="brand" style="margin-bottom:18px"><div class="logo">S</div><div><h1>SINGAM</h1><p>Technician AI • Repair shop assistant</p></div></div>
-  <section class="panel">
-    <div class="eyebrow">Secure workspace</div><h2 style="margin:6px 0 4px">Welcome to SINGAM</h2><p class="sub" style="margin-bottom:20px">Sign in to access your private technician workspace, saved repairs and Smart Recall.</p>
-    <div class="auth-tabs"><button id="signInTab" class="btn primary" type="button">Sign in</button><button id="signUpTab" class="btn" type="button">Create account</button></div>
-    <form id="authForm" class="grid2">
-      <div class="field full"><label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" required placeholder="you@example.com"></div>
-      <div class="field full"><label for="authPassword">Password</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="At least 6 characters"></div>
-      <div class="field full"><button id="authSubmit" class="btn primary" type="submit">Sign in securely</button></div>
-    </form><div id="authNotice" class="notice hidden" style="margin-top:12px"></div>
-  </section><div class="footnote">Your account's repair records and conversation memory are kept separate from other users.</div>
-</div>
+  <div id="authView" class="shell auth-wrap">
+    <div class="brand" style="margin-bottom:18px">
+      <div class="logo">S</div>
+      <div>
+        <h1>SINGAM</h1>
+        <p>Technician AI • Repair shop assistant</p>
+      </div>
+    </div>
 
-<div id="appView" class="shell hidden">
-  <header class="topbar">
-    <div class="brand"><div class="logo">S</div><div><h1>SINGAM</h1><p>Technician AI • Command center</p></div></div>
-    <div class="top-actions"><span id="accountPill" class="pill">Signed in</span><button id="voiceToggle" class="btn small ghost" type="button">🔊 Voice on</button><button id="signOutBtn" class="btn small ghost" type="button">Sign out</button></div>
-  </header>
-  <div class="layout">
-    <aside class="sidebar">
-      <div class="nav-title">WORKSPACE</div>
-      <button class="nav-btn active" data-page="chat"><span class="nav-icon">⌘</span>Command Center</button>
-      <button class="nav-btn" data-page="history"><span class="nav-icon">▤</span>Repair History</button>
-      <button class="nav-btn" data-page="new"><span class="nav-icon">＋</span>New Repair Record</button>
-      <div class="sidebar-foot"><div style="color:var(--cyan);font-weight:800;margin-bottom:5px">SMART RECALL</div>Relevant past conversations are saved to your account's database.</div>
-    </aside>
-    <main class="main">
-      <section class="hero">
-        <div class="eyebrow">Technician workspace / online</div><h2>Diagnose smarter. Repair with confidence.</h2><p>A practical AI command center for troubleshooting, image analysis, PDF review, service reports and repair-shop records.</p>
-        <div class="hero-stats"><span class="stat">◈ Image analysis</span><span class="stat">▤ PDF analysis</span><span class="stat">⌁ Smart Recall</span><span class="stat">▣ Repair records</span></div>
-      </section>
-      <section id="usagePanel" class="panel">
-        <div class="panel-head"><div><h3>Daily AI usage</h3><div id="usageText" class="sub">Loading your usage…</div></div><span id="usageBadge" class="pill">Checking</span></div>
-        <div class="usagebar"><span id="usageFill"></span></div>
-      </section>
+    <section class="panel">
+      <div class="eyebrow">Secure workspace</div>
+      <h2 style="margin:6px 0 4px">Welcome to SINGAM</h2>
+      <p class="sub">
+        Sign in to access your private technician workspace.
+      </p>
 
-      <section id="chatPage" class="panel">
-        <div class="panel-head"><div><h3>Command Center</h3><div class="sub">Ask a technical question or attach a photo / PDF.</div></div><span class="pill">SINGAM AI</span></div>
-        <div class="suggestions">
-          <button type="button" data-prompt="My PC turns on but there is no display. Help me diagnose it step by step.">PC no display</button>
-          <button type="button" data-prompt="Explain this device error code and ask for the model if needed.">Error code</button>
-          <button type="button" data-prompt="Check whether these computer parts are compatible. Tell me which exact models you need.">Parts compatibility</button>
-          <button type="button" data-prompt="Create a professional repair report PDF using only the details I provide.">Repair report PDF</button>
+      <div id="authTabs" class="auth-tabs">
+        <button id="signInTab" class="btn primary" type="button">
+          Sign in
+        </button>
+        <button id="signUpTab" class="btn" type="button">
+          Create account
+        </button>
+      </div>
+
+      <form id="authForm" class="grid2">
+        <div class="field full">
+          <label for="authEmail">Email</label>
+          <input id="authEmail" type="email" autocomplete="email"
+                 required placeholder="you@example.com">
         </div>
-        <div id="chatbox" class="chatbox" aria-live="polite"><div class="bubble assistant"><div class="who">SINGAM</div><div class="body">Hello! I’m SINGAM Technician AI. Describe the device, symptom, brand/model, or upload an image or PDF to begin.</div></div></div>
-        <div id="filePreview" class="preview hidden"></div>
-        <div class="composer">
-          <textarea id="messageInput" rows="3" placeholder="Describe the issue… (Enter to send, Shift+Enter for a new line)"></textarea>
-          <div class="attachbar">
-            <label class="file-label">＋ Image / PDF<input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"></label>
-            <button id="micBtn" class="btn small ghost" type="button">🎙 Dictate</button>
-            <button id="clearFileBtn" class="btn small ghost hidden" type="button">Remove file</button>
-            <span id="fileLabel" class="sub"></span>
-          </div>
-          <div class="row" style="justify-content:space-between"><span class="sub">Never upload passwords or API keys. Image/PDF limit: 5 MB.</span><button id="sendBtn" class="btn primary" type="button">Send to SINGAM ➜</button></div>
+
+        <div class="field full">
+          <label for="authPassword">Password</label>
+          <input id="authPassword" type="password"
+                 autocomplete="current-password" minlength="8"
+                 required placeholder="At least 8 characters">
         </div>
-      </section>
 
-      <section id="historyPage" class="panel hidden">
-        <div class="panel-head"><div><h3>Repair History</h3><div class="sub">Your repair records saved in Supabase and scoped to your account.</div></div><button id="historyRefresh" class="btn small" type="button">↻ Refresh</button></div>
-        <div class="table-tools"><input id="historySearch" placeholder="Search customer, device, complaint or report number…"><select id="historyStatus" style="max-width:190px"><option value="">All statuses</option><option value="pending">Pending</option><option value="in_progress">In progress</option><option value="completed">Completed</option><option value="unable_to_repair">Unable to repair</option></select><button id="historyNew" class="btn primary" type="button">＋ New record</button></div>
-        <div id="historyNotice" class="notice hidden"></div><div id="repairList" class="repair-list"><div class="empty">Loading records…</div></div>
-      </section>
+        <div id="forgotPasswordRow" class="field full">
+          <button id="forgotPasswordBtn" class="btn ghost" type="button">
+            Forgot password?
+          </button>
+        </div>
 
-      <section id="newPage" class="panel hidden">
-        <div class="panel-head"><div><h3 id="repairFormTitle">New Repair Record</h3><div class="sub">Record customer-reported issues, findings and repair work.</div></div><button id="cancelEdit" class="btn small ghost hidden" type="button">Cancel edit</button></div>
-        <div id="repairNotice" class="notice hidden"></div>
-        <form id="repairForm" class="grid2">
-          <div class="field"><label for="customer_name">Customer name (optional)</label><input id="customer_name" maxlength="150" placeholder="Customer / shop reference"></div>
-          <div class="field"><label for="device_type">Device type *</label><select id="device_type" required><option value="">Select device</option><option>Desktop PC</option><option>Laptop</option><option>Monitor</option><option>Printer</option><option>Router / Network</option><option>Mobile device</option><option>TV</option><option>AC</option><option>Washing machine</option><option>Refrigerator</option><option>Other</option></select></div>
-          <div class="field"><label for="brand_model">Brand / model</label><input id="brand_model" maxlength="250" placeholder="e.g. brand and exact model"></div>
-          <div class="field"><label for="status">Status</label><select id="status"><option value="pending">Pending</option><option value="in_progress">In progress</option><option value="completed">Completed</option><option value="unable_to_repair">Unable to repair</option></select></div>
-          <div class="field full"><label for="complaint">Customer complaint *</label><textarea id="complaint" required placeholder="What issue did the customer report?"></textarea></div>
-          <div class="field full"><label for="diagnosis">Diagnosis / findings</label><textarea id="diagnosis" placeholder="Checks performed and confirmed or suspected cause"></textarea></div>
-          <div class="field full"><label for="repair_actions">Repair actions</label><textarea id="repair_actions" placeholder="Work completed or next action"></textarea></div>
-          <div class="field"><label for="parts_used">Parts used</label><textarea id="parts_used" placeholder="Parts replaced, if any"></textarea></div>
-          <div class="field"><label for="cost">Cost (optional)</label><input id="cost" type="number" min="0" step="0.01" placeholder="0.00"></div>
-          <div class="field full row"><button id="saveRepairBtn" class="btn primary" type="submit">Save repair record</button><button id="resetRepairBtn" class="btn ghost" type="button">Clear form</button></div>
-        </form>
-      </section>
+        <div class="field full">
+          <button id="authSubmit" class="btn primary" type="submit">
+            Sign in securely
+          </button>
+        </div>
 
-      <section id="detailPage" class="panel hidden">
-        <div class="panel-head"><div><h3>Repair record details</h3><div id="detailSubtitle" class="sub"></div></div><button id="detailBack" class="btn small ghost" type="button">← Back to history</button></div>
-        <div id="detailGrid" class="detail-grid"></div><div class="repair-actions"><button id="detailPdf" class="btn primary" type="button">Download PDF</button><button id="detailEdit" class="btn" type="button">Edit record</button><button id="detailDelete" class="btn danger" type="button">Delete record</button></div>
-      </section>
-      <div class="footnote">SINGAM Technician AI • AI suggestions are not a substitute for safe, qualified repair work.</div>
-    </main>
+        <div id="resendVerificationRow" class="field full hidden">
+          <button id="resendVerificationBtn" class="btn ghost" type="button">
+            Resend verification email
+          </button>
+        </div>
+      </form>
+
+      <form id="resetPasswordForm" class="grid2 hidden">
+        <div class="field full">
+          <label for="newPassword">New password</label>
+          <input id="newPassword" type="password" minlength="8"
+                 autocomplete="new-password" required
+                 placeholder="At least 8 characters">
+        </div>
+
+        <div class="field full">
+          <label for="confirmNewPassword">Confirm new password</label>
+          <input id="confirmNewPassword" type="password" minlength="8"
+                 autocomplete="new-password" required
+                 placeholder="Enter the same password again">
+        </div>
+
+        <div class="field full">
+          <button id="saveNewPasswordBtn" class="btn primary" type="submit">
+            Update password
+          </button>
+          <button id="cancelResetBtn" class="btn ghost" type="button">
+            Back to sign in
+          </button>
+        </div>
+      </form>
+
+      <div id="authNotice" class="notice hidden" style="margin-top:12px"></div>
+    </section>
+
+    <div class="footnote">
+      SINGAM Technician AI • Secure account access
+    </div>
   </div>
-</div>
-<div id="toast" class="toast" role="status"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PART 2 continues here: authenticated app interface and JavaScript -->
+</body>
+</html>
+
+  <div id="appView" class="shell hidden">
+    <header class="panel" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+        <div class="brand">
+          <div class="logo">S</div>
+          <div>
+            <h1>SINGAM</h1>
+            <p>Technician AI Command Center</p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span id="accountPill" class="muted">Signed in</span>
+          <button id="signOutBtn" class="btn" type="button">Sign out</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
+        <div class="notice" style="flex:1;min-width:150px">
+          <div class="muted">Daily chat usage</div>
+          <strong id="usageText">Loading usage…</strong>
+          <div id="usageBar" style="height:5px;border-radius:9px;background:#253441;margin-top:8px;overflow:hidden">
+            <div id="usageFill" style="width:0;height:100%;background:var(--cyan)"></div>
+          </div>
+        </div>
+        <div class="notice" style="flex:1;min-width:150px">
+          <div class="muted">Workspace</div>
+          <strong>Private technician assistant</strong>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid2">
+      <section class="panel" style="grid-column:1/-1">
+        <div class="eyebrow">AI Assistant</div>
+        <h2 style="margin:6px 0">Technician Chat</h2>
+        <p class="sub">Ask repair questions, analyse supported files, or prepare a repair report.</p>
+
+        <div id="chatMessages" aria-live="polite"
+             style="display:flex;flex-direction:column;gap:12px;margin:18px 0;min-height:100px;max-height:520px;overflow:auto">
+          <div class="notice">
+            Welcome to SINGAM Technician AI. Describe the device and its symptoms to begin.
+          </div>
+        </div>
+
+        <div id="filePreview" class="notice hidden" style="margin-bottom:12px">
+          <span id="filePreviewName"></span>
+          <button id="removeFileBtn" class="btn ghost" type="button">Remove file</button>
+        </div>
+
+        <form id="chatForm" style="display:flex;flex-direction:column;gap:10px">
+          <label for="chatInput">Your question</label>
+          <textarea id="chatInput" rows="3"
+                    placeholder="Describe the device, symptoms, error code, or repair task…"
+                    required></textarea>
+
+          <input id="imageInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf,.jpg,.jpeg,.png,.webp,.gif" class="hidden">
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button id="uploadBtn" class="btn" type="button">Attach image / PDF</button>
+            <button id="voiceInputBtn" class="btn" type="button">🎙 Dictate</button>
+            <button id="voiceToggleBtn" class="btn" type="button">🔊 Voice on/off</button>
+            <button id="sendBtn" class="btn primary" type="submit">Send message</button>
+          </div>
+          <p class="muted">Supported uploads: image or PDF up to 5 MB. Scanned PDFs may require OCR.</p>
+        </form>
+
+        <div id="chatNotice" class="notice hidden" style="margin-top:12px"></div>
+      </section>
+
+      <section class="panel">
+        <div class="eyebrow">Repair History</div>
+        <h2 style="margin:6px 0">Saved repairs</h2>
+        <p class="sub">Review and manage repair records associated with your account.</p>
+
+        <form id="repairForm" style="display:grid;gap:10px;margin-top:16px">
+          <div class="field">
+            <label for="repairTitle">Repair title</label>
+            <input id="repairTitle" required placeholder="e.g. Laptop not powering on">
+          </div>
+          <div class="field">
+            <label for="repairDevice">Device</label>
+            <input id="repairDevice" placeholder="Brand and model">
+          </div>
+          <div class="field">
+            <label for="repairNotes">Diagnosis and repair notes</label>
+            <textarea id="repairNotes" rows="3" placeholder="Symptoms, checks, diagnosis and actions"></textarea>
+          </div>
+          <button class="btn primary" type="submit">Save repair</button>
+        </form>
+
+        <div id="repairNotice" class="notice hidden" style="margin-top:12px"></div>
+        <div id="repairList" style="display:grid;gap:10px;margin-top:14px">
+          <p class="muted">Loading repair history…</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="eyebrow">Quick tips</div>
+        <h2 style="margin:6px 0">Technician workflow</h2>
+        <ol style="padding-left:20px;color:var(--muted)">
+          <li>Record the device model and reported symptoms.</li>
+          <li>Check power, cables and visible error codes.</li>
+          <li>Ask SINGAM for a step-by-step diagnostic plan.</li>
+          <li>Verify the result before saving the repair notes.</li>
+        </ol>
+        <p class="muted">Follow manufacturer safety instructions. Disconnect power before opening equipment when appropriate.</p>
+      </section>
+    </div>
+  </div>
+
+  <style>
+    #chatMessages .notice {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .chat-user {
+      align-self: flex-end;
+      max-width: 92%;
+      border-color: #55eaff66;
+    }
+
+    .chat-ai {
+      align-self: flex-start;
+      max-width: 100%;
+    }
+
+    .repair-card {
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel2);
+      overflow-wrap: anywhere;
+    }
+
+    .repair-card h3 {
+      margin: 0 0 5px;
+      font-size: 15px;
+    }
+
+    .repair-card p {
+      margin: 5px 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 600px) {
+      #appView {
+        padding: 12px;
+      }
+
+      #chatMessages {
+        max-height: 420px !important;
+      }
+
+      #chatInput {
+        min-height: 90px;
+      }
+
+      #sendBtn {
+        flex: 1;
+      }
+    }
+  </style>
+
 <script>
 "use strict";
-let supabaseClient=null, currentSession=null, config={}, authMode="signin", selectedFile=null, currentRepairId=null, selectedRepair=null, repairCache=[], repairBusy=false, voiceEnabled=true, recognition=null, isSending=false;
-const $=id=>document.getElementById(id);
-function toast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),3600);}
-function showNotice(id,message,type=""){const el=$(id);el.textContent=message;el.className="notice"+(type?" "+type:"");el.classList.remove("hidden");}
-function hideNotice(id){$(id).classList.add("hidden");}
-async function loadConfig(){
-  try{const r=await fetch("/config");config=await r.json();if(config.supabaseUrl&&config.supabasePublishableKey&&window.supabase){supabaseClient=window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey);const {data}=await supabaseClient.auth.getSession();currentSession=data.session||null;if(currentSession)showApp();else showAuth();supabaseClient.auth.onAuthStateChange((_event,session)=>{currentSession=session;if(session)showApp();else showAuth();});}else{showNotice("authNotice","Server/Supabase configuration is incomplete.","error");} }catch(e){showNotice("authNotice","Could not load SINGAM configuration. Check that the server is online.","error");}
-}
-function showAuth(){ $("authView").classList.remove("hidden");$("appView").classList.add("hidden"); }
-function showApp(){if(!currentSession)return;$("authView").classList.add("hidden");$("appView").classList.remove("hidden");$("accountPill").textContent=currentSession.user?.email||"Signed in";refreshUsage();loadRepairHistory();}
-function setAuthMode(mode){authMode=mode;$("signInTab").classList.toggle("primary",mode==="signin");$("signUpTab").classList.toggle("primary",mode==="signup");$("authSubmit").textContent=mode==="signin"?"Sign in securely":"Create account";$("authPassword").autocomplete=mode==="signin"?"current-password":"new-password";hideNotice("authNotice");}
-$("signInTab").addEventListener("click",()=>setAuthMode("signin"));$("signUpTab").addEventListener("click",()=>setAuthMode("signup"));
-$("authForm").addEventListener("submit",async e=>{e.preventDefault();if(!supabaseClient)return;const button=$("authSubmit");button.disabled=true;button.textContent="Please wait…";hideNotice("authNotice");try{const email=$("authEmail").value.trim(),password=$("authPassword").value;if(authMode==="signin"){const {error}=await supabaseClient.auth.signInWithPassword({email,password});if(error)throw error;}else{const {data,error}=await supabaseClient.auth.signUp({email,password});if(error)throw error;if(!data.session)showNotice("authNotice","Account created. Check your email to confirm it, then sign in.","success");else toast("Account created successfully.");}}catch(e){showNotice("authNotice",e.message||"Authentication failed.","error");}finally{button.disabled=false;button.textContent=authMode==="signin"?"Sign in securely":"Create account";}});
-$("signOutBtn").addEventListener("click",async()=>{if(supabaseClient)await supabaseClient.auth.signOut();currentSession=null;showAuth();});
-async function getToken(){if(!supabaseClient)throw new Error("Supabase client is not ready.");const {data,error}=await supabaseClient.auth.getSession();if(error||!data.session?.access_token)throw new Error("Please sign in again.");currentSession=data.session;return data.session.access_token;}
-async function apiFetch(url,options={}){const token=await getToken();const headers={...(options.headers||{}),Authorization:"Bearer "+token};if(options.body&&!(options.body instanceof FormData))headers["Content-Type"]="application/json";const r=await fetch(url,{...options,headers});let data;const type=r.headers.get("content-type")||"";if(type.includes("application/pdf"))return {response:r,blob:await r.blob()};data=await r.json().catch(()=>({error:"Invalid server response."}));if(!r.ok)throw new Error(data.error||`Request failed (${r.status}).`);return data;}
-async function refreshUsage(){if(!currentSession)return;try{const u=await apiFetch("/usage");const limit=Number(u.daily_limit||config.dailyChatLimit||100),count=Number(u.chat_count||0),remaining=Number(u.remaining??Math.max(0,limit-count));$("usageText").textContent=`${count} of ${limit} chats used today • ${remaining} remaining`; $("usageBadge").textContent=`${remaining} left`; $("usageFill").style.width=Math.min(100,limit?count/limit*100:0)+"%";}catch(e){$("usageText").textContent="Usage information is temporarily unavailable.";$("usageBadge").textContent="Unavailable";}}
-function showPage(page){document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===page));["chat","history","new","detail"].forEach(p=>$(p+"Page").classList.toggle("hidden",p!==page));if(page==="history")loadRepairHistory();if(page==="new"&&!currentRepairId)resetRepairForm();}
-document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
-$("historyNew").addEventListener("click",()=>{resetRepairForm();showPage("new");});
-$("historyRefresh").addEventListener("click",()=>loadRepairHistory());
-$("historySearch").addEventListener("input",renderRepairHistory);$("historyStatus").addEventListener("change",renderRepairHistory);
-document.querySelectorAll("[data-prompt]").forEach(b=>b.addEventListener("click",()=>{$("messageInput").value=b.dataset.prompt;$("messageInput").focus();}));
-function addBubble(role,text){const box=$("chatbox"),bubble=document.createElement("div");bubble.className="bubble "+role;const who=document.createElement("div");who.className="who";who.textContent=role==="user"?"YOU":"SINGAM";const body=document.createElement("div");body.className="body";body.textContent=text;bubble.append(who,body);box.appendChild(bubble);box.scrollTop=box.scrollHeight;return body;}
-function base64ToBlob(base64,mime){const binary=atob(base64),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return new Blob([bytes],{type:mime});}
-function downloadBlob(blob,filename){const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function fileToBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(",")[1]||"");reader.onerror=()=>reject(new Error("Could not read the selected file."));reader.readAsDataURL(file);});}
-$("fileInput").addEventListener("change",()=>{const file=$("fileInput").files?.[0];if(!file){clearSelectedFile();return;}if(file.size>5*1024*1024){toast("File limit is 5 MB.");$("fileInput").value="";return;}const valid=file.type==="application/pdf"||["image/jpeg","image/png","image/webp","image/gif"].includes(file.type);if(!valid){toast("Choose a JPG, PNG, WEBP, GIF or PDF file.");$("fileInput").value="";return;}selectedFile=file;$("fileLabel").textContent=file.name;$("clearFileBtn").classList.remove("hidden");const preview=$("filePreview");preview.replaceChildren();preview.classList.remove("hidden");if(file.type.startsWith("image/")){const img=document.createElement("img");img.src=URL.createObjectURL(file);img.alt="Image preview";preview.appendChild(img);}const label=document.createElement("span");label.textContent=`${file.name} • ${(file.size/1024).toFixed(0)} KB`;preview.appendChild(label);});
-function clearSelectedFile(){$("fileInput").value="";selectedFile=null;$("fileLabel").textContent="";$("clearFileBtn").classList.add("hidden");$("filePreview").replaceChildren();$("filePreview").classList.add("hidden");}
-$("clearFileBtn").addEventListener("click",clearSelectedFile);
-$("messageInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}});
-$("sendBtn").addEventListener("click",sendMessage);
-async function sendMessage(){if(isSending)return;const message=$("messageInput").value.trim();if(!message&&!selectedFile){toast("Enter a message or attach an image/PDF.");return;}isSending=true;$("sendBtn").disabled=true;$("sendBtn").textContent="Working…";addBubble("user",message+(selectedFile?`\n[Attached: ${selectedFile.name}]`:""));$("messageInput").value="";const pending=addBubble("assistant","Checking the request…");try{const payload={message,command:message};if(selectedFile){const base64=await fileToBase64(selectedFile);if(selectedFile.type==="application/pdf")payload.pdfBase64=base64;else{payload.imageData=base64;payload.imageMimeType=selectedFile.type;}}pending.textContent="SINGAM is analyzing…";const result=await apiFetch("/ask",{method:"POST",body:JSON.stringify(payload)});pending.textContent=result.reply||"No reply received.";if(result.pdf?.data){downloadBlob(base64ToBlob(result.pdf.data,result.pdf.mimeType||"application/pdf"),result.pdf.filename||"singam-repair-report.pdf");toast("Repair report PDF generated.");}if(voiceEnabled&&result.reply)speak(result.reply);await refreshUsage();}catch(e){pending.textContent="Error: "+e.message;toast(e.message);}finally{clearSelectedFile();isSending=false;$("sendBtn").disabled=false;$("sendBtn").textContent="Send to SINGAM ➜";$("messageInput").focus();}}
-function speak(text){if(!("speechSynthesis"in window)||!voiceEnabled)return;window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text.slice(0,4000));utterance.lang="en-IN";utterance.rate=.95;utterance.pitch=1;window.speechSynthesis.speak(utterance);}
-$("voiceToggle").addEventListener("click",()=>{voiceEnabled=!voiceEnabled;$("voiceToggle").textContent=voiceEnabled?"🔊 Voice on":"🔇 Voice off";if(!voiceEnabled&&"speechSynthesis"in window)window.speechSynthesis.cancel();});
-$("micBtn").addEventListener("click",()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){toast("Voice input is not supported in this browser. Try Chrome.");return;}if(recognition){recognition.stop();recognition=null;$("micBtn").textContent="🎙 Dictate";return;}recognition=new SR();recognition.lang="en-IN";recognition.interimResults=false;recognition.onresult=e=>{$("messageInput").value=($("messageInput").value+" "+e.results[0][0].transcript).trim();};recognition.onerror=()=>toast("Voice input could not start. Check microphone permission.");recognition.onend=()=>{$("micBtn").textContent="🎙 Dictate";recognition=null;};$("micBtn").textContent="Listening… click to stop";recognition.start();});
 
-async function loadRepairHistory(){if(!currentSession||repairBusy)return;const list=$("repairList");list.innerHTML='<div class="empty">Loading records…</div>';hideNotice("historyNotice");try{const data=await apiFetch("/api/repairs");repairCache=Array.isArray(data)?data:(data.repairs||[]);renderRepairHistory();}catch(e){list.innerHTML="";showNotice("historyNotice",e.message,"error");list.innerHTML='<div class="empty">Could not load records. Check the server and Supabase configuration.</div>';}}
-function statusLabel(status){return String(status||"pending").replace(/_/g," ");}
-function renderRepairHistory(){const list=$("repairList");list.replaceChildren();const q=$("historySearch").value.trim().toLowerCase(),status=$("historyStatus").value;const records=repairCache.filter(r=>(!status||r.status===status)&&[r.report_number,r.customer_name,r.device_type,r.brand_model,r.complaint,r.diagnosis].some(v=>String(v||"").toLowerCase().includes(q)));if(!records.length){list.innerHTML='<div class="empty">No matching repair records. Create a new record to get started.</div>';return;}for(const r of records){const card=document.createElement("article");card.className="repair-card";const top=document.createElement("div");top.className="repair-top";const left=document.createElement("div"),h=document.createElement("h4");h.textContent=`${r.device_type||"Device"}${r.brand_model?" · "+r.brand_model:""}`;const meta=document.createElement("div");meta.className="repair-meta";meta.textContent=`${r.report_number||"No report number"} · ${r.customer_name||"Customer not provided"} · ${new Date(r.created_at).toLocaleDateString()}`;left.append(h,meta);const badge=document.createElement("span");badge.className="status "+(r.status||"pending");badge.textContent=statusLabel(r.status);top.append(left,badge);const complaint=document.createElement("p");complaint.style.margin="12px 0 0";complaint.textContent=r.complaint||"No complaint provided.";const actions=document.createElement("div");actions.className="repair-actions";actions.append(makeButton("View","btn small",()=>openRepair(r.id)),makeButton("Edit","btn small",()=>editRepair(r.id)),makeButton("PDF","btn small",()=>downloadRepairPdf(r.id)),makeButton("Delete","btn small danger",()=>deleteRepair(r.id)));card.append(top,complaint,actions);list.appendChild(card);}}
-function makeButton(text,cls,fn){const b=document.createElement("button");b.type="button";b.className=cls;b.textContent=text;b.addEventListener("click",fn);return b;}
-async function openRepair(id){const r=repairCache.find(x=>x.id===id);if(!r){toast("Record not found. Refresh the history.");return;}selectedRepair=r;currentRepairId=id;$("detailSubtitle").textContent=`${r.report_number||""} · ${r.device_type||"Device"}`;const grid=$("detailGrid");grid.replaceChildren();const fields=[["Report number",r.report_number],["Customer",r.customer_name],["Device",r.device_type],["Brand / model",r.brand_model],["Complaint",r.complaint],["Diagnosis",r.diagnosis],["Repair actions",r.repair_actions],["Parts used",r.parts_used],["Cost",r.cost==null?"Not provided":`₹${r.cost}`],["Status",statusLabel(r.status)],["Created",r.created_at?new Date(r.created_at).toLocaleString():""],["Updated",r.updated_at?new Date(r.updated_at).toLocaleString():""]];for(const [label,value] of fields){const d=document.createElement("div");d.className="detail-item";const s=document.createElement("strong");s.textContent=label;const p=document.createElement("p");p.textContent=value==null||value===""?"Not provided":String(value);d.append(s,p);grid.appendChild(d);}showPage("detail");}
-function resetRepairForm(){currentRepairId=null;$("repairForm").reset();$("repairFormTitle").textContent="New Repair Record";$("saveRepairBtn").textContent="Save repair record";$("cancelEdit").classList.add("hidden");hideNotice("repairNotice");}
-$("resetRepairBtn").addEventListener("click",resetRepairForm);$("cancelEdit").addEventListener("click",()=>{resetRepairForm();showPage("history");});
-function fillRepairForm(r){currentRepairId=r.id;for(const k of ["customer_name","device_type","brand_model","complaint","diagnosis","repair_actions","parts_used","cost","status"])$(k).value=r[k]??(k==="status"?"pending":"");$("repairFormTitle").textContent="Edit Repair Record";$("saveRepairBtn").textContent="Update repair record";$("cancelEdit").classList.remove("hidden");showPage("new");}
-function editRepair(id){const r=repairCache.find(x=>x.id===id);if(!r){toast("Record not found.");return;}fillRepairForm(r);}
-$("detailEdit").addEventListener("click",()=>{if(selectedRepair)fillRepairForm(selectedRepair);});
-$("detailBack").addEventListener("click",()=>showPage("history"));
-$("detailPdf").addEventListener("click",()=>selectedRepair&&downloadRepairPdf(selectedRepair.id));
-$("detailDelete").addEventListener("click",()=>selectedRepair&&deleteRepair(selectedRepair.id));
-$("repairForm").addEventListener("submit",async e=>{e.preventDefault();if(repairBusy)return;repairBusy=true;$("saveRepairBtn").disabled=true;hideNotice("repairNotice");const body={};for(const k of ["customer_name","device_type","brand_model","complaint","diagnosis","repair_actions","parts_used","cost","status"])body[k]=$(k).value;try{const editing=Boolean(currentRepairId);const data=await apiFetch(editing?`/api/repairs/${encodeURIComponent(currentRepairId)}`:"/api/repairs",{method:editing?"PATCH":"POST",body:JSON.stringify(body)});const saved=data.repair;if(saved){const i=repairCache.findIndex(x=>x.id===saved.id);if(i>=0)repairCache[i]=saved;else repairCache.unshift(saved);}resetRepairForm();toast(editing?"Repair record updated.":"Repair record saved.");showPage("history");renderRepairHistory();}catch(e){showNotice("repairNotice",e.message,"error");}finally{repairBusy=false;$("saveRepairBtn").disabled=false;}});
-async function deleteRepair(id){if(!confirm("Delete this repair record permanently?"))return;try{await apiFetch(`/api/repairs/${encodeURIComponent(id)}`,{method:"DELETE"});repairCache=repairCache.filter(r=>r.id!==id);toast("Repair record deleted.");if($("detailPage").classList.contains("hidden")===false)showPage("history");else renderRepairHistory();}catch(e){toast(e.message);}}
-async function downloadRepairPdf(id){try{const result=await apiFetch(`/api/repairs/${encodeURIComponent(id)}/pdf`);downloadBlob(result.blob,`${selectedRepair?.report_number||"singam-repair"}.pdf`); }catch(e){toast(e.message||"Could not download PDF.");}}
+const $ = id => document.getElementById(id);
+
+let supabaseClient = null;
+let config = {};
+let currentSession = null;
+let authMode = "signin";
+let selectedFile = null;
+let voiceEnabled = false;
+let recognition = null;
+
+function showNotice(id, message, type = "") {
+  const el = $(id);
+  if (!el) return;
+  el.textContent = message;
+  el.className = "notice" + (type ? " " + type : "");
+  el.classList.remove("hidden");
+}
+
+function hideNotice(id) {
+  const el = $(id);
+  if (!el) return;
+  el.textContent = "";
+  el.className = "notice hidden";
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+
+  $("signInTab").classList.toggle("primary", mode === "signin");
+  $("signUpTab").classList.toggle("primary", mode === "signup");
+
+  $("authSubmit").textContent =
+    mode === "signin" ? "Sign in securely" : "Create account";
+
+  $("authPassword").autocomplete =
+    mode === "signin" ? "current-password" : "new-password";
+
+  $("forgotPasswordRow").classList.toggle("hidden", mode !== "signin");
+  $("resendVerificationRow").classList.toggle("hidden", mode !== "signup");
+
+  $("authForm").classList.remove("hidden");
+  $("resetPasswordForm").classList.add("hidden");
+  $("authTabs").classList.remove("hidden");
+
+  hideNotice("authNotice");
+}
+
+function showAuth() {
+  $("authView").classList.remove("hidden");
+  $("appView").classList.add("hidden");
+}
+
+function showApp() {
+  if (!currentSession) return;
+
+  $("authView").classList.add("hidden");
+  $("appView").classList.remove("hidden");
+  $("accountPill").textContent =
+    currentSession.user?.email || "Signed in";
+
+  refreshUsage();
+  loadRepairHistory();
+}
+
+function showPasswordReset() {
+  $("authView").classList.remove("hidden");
+  $("appView").classList.add("hidden");
+  $("authTabs").classList.add("hidden");
+  $("authForm").classList.add("hidden");
+  $("resetPasswordForm").classList.remove("hidden");
+
+  showNotice(
+    "authNotice",
+    "Enter your new password below.",
+    "success"
+  );
+}
+
+async function loadConfig() {
+  try {
+    const response = await fetch("/config");
+    if (!response.ok) throw new Error("Could not load server configuration.");
+
+    config = await response.json();
+
+    if (
+      !config.supabaseUrl ||
+      !config.supabasePublishableKey ||
+      !window.supabase
+    ) {
+      throw new Error("Supabase configuration is missing.");
+    }
+
+    supabaseClient = window.supabase.createClient(
+      config.supabaseUrl,
+      config.supabasePublishableKey
+    );
+
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      currentSession = session;
+
+      if (event === "PASSWORD_RECOVERY") {
+        showPasswordReset();
+        return;
+      }
+
+      if (session) {
+        showApp();
+      } else {
+        showAuth();
+      }
+    });
+
+    const { data, error } =
+      await supabaseClient.auth.getSession();
+
+    if (error) throw error;
+
+    currentSession = data.session || null;
+
+    if (currentSession) {
+      showApp();
+    } else {
+      showAuth();
+    }
+  } catch (error) {
+    console.error("SINGAM setup error:", error);
+    showAuth();
+    showNotice(
+      "authNotice",
+      error.message || "Could not connect to SINGAM.",
+      "error"
+    );
+  }
+}
+
+$("signInTab").addEventListener("click", () => setAuthMode("signin"));
+$("signUpTab").addEventListener("click", () => setAuthMode("signup"));
+
+$("authForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!supabaseClient) return;
+
+  const button = $("authSubmit");
+  button.disabled = true;
+  hideNotice("authNotice");
+
+  try {
+    const email = $("authEmail").value.trim();
+    const password = $("authPassword").value;
+
+    if (password.length < 8) {
+      throw new Error("Password must contain at least 8 characters.");
+    }
+
+    if (authMode === "signin") {
+      const { error } =
+        await supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+      if (error) throw error;
+    } else {
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin + "/"
+        }
+      });
+
+      if (error) throw error;
+
+      if (!data.session) {
+        showNotice(
+          "authNotice",
+          "Account created. Check your email and verify your account before signing in.",
+          "success"
+        );
+      } else {
+        showNotice("authNotice", "Account created successfully.", "success");
+      }
+    }
+  } catch (error) {
+    showNotice("authNotice", error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent =
+      authMode === "signin" ? "Sign in securely" : "Create account";
+  }
+});
+
+$("forgotPasswordBtn").addEventListener("click", async () => {
+  if (!supabaseClient) return;
+
+  const email = $("authEmail").value.trim();
+
+  if (!email) {
+    showNotice("authNotice", "Enter your email address first.", "error");
+    $("authEmail").focus();
+    return;
+  }
+
+  const button = $("forgotPasswordBtn");
+  button.disabled = true;
+
+  try {
+    const { error } =
+      await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/"
+      });
+
+    if (error) throw error;
+
+    showNotice(
+      "authNotice",
+      "If the account exists, a password reset email will be sent. Check your inbox and spam folder.",
+      "success"
+    );
+  } catch (error) {
+    showNotice("authNotice", error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$("resendVerificationBtn").addEventListener("click", async () => {
+  if (!supabaseClient) return;
+
+  const email = $("authEmail").value.trim();
+
+  if (!email) {
+    showNotice("authNotice", "Enter your email address first.", "error");
+    return;
+  }
+
+  const button = $("resendVerificationBtn");
+  button.disabled = true;
+
+  try {
+    const { error } = await supabaseClient.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: window.location.origin + "/"
+      }
+    });
+
+    if (error) throw error;
+
+    showNotice(
+      "authNotice",
+      "If verification is needed, a confirmation email will be sent.",
+      "success"
+    );
+  } catch (error) {
+    showNotice("authNotice", error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$("resetPasswordForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const password = $("newPassword").value;
+  const confirmation = $("confirmNewPassword").value;
+  const button = $("saveNewPasswordBtn");
+
+  if (password.length < 8) {
+    showNotice("authNotice", "Use at least 8 characters.", "error");
+    return;
+  }
+
+  if (password !== confirmation) {
+    showNotice("authNotice", "Passwords do not match.", "error");
+    return;
+  }
+
+  button.disabled = true;
+
+  try {
+    const { error } =
+      await supabaseClient.auth.updateUser({ password });
+
+    if (error) throw error;
+
+    await supabaseClient.auth.signOut();
+    currentSession = null;
+
+    $("resetPasswordForm").classList.add("hidden");
+    $("authTabs").classList.remove("hidden");
+    $("authForm").classList.remove("hidden");
+
+    setAuthMode("signin");
+    showAuth();
+
+    showNotice(
+      "authNotice",
+      "Password updated. Sign in using your new password.",
+      "success"
+    );
+  } catch (error) {
+    showNotice("authNotice", error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$("cancelResetBtn").addEventListener("click", async () => {
+  if (supabaseClient) {
+    await supabaseClient.auth.signOut();
+  }
+
+  currentSession = null;
+  setAuthMode("signin");
+  showAuth();
+});
+
+$("signOutBtn").addEventListener("click", async () => {
+  if (!supabaseClient) return;
+
+  const { error } = await supabaseClient.auth.signOut();
+
+  if (error) {
+    showNotice("chatNotice", error.message, "error");
+    return;
+  }
+
+  currentSession = null;
+  showAuth();
+});
+
+async function apiFetch(url, options = {}) {
+  if (!supabaseClient) {
+    throw new Error("Authentication is not ready.");
+  }
+
+  const { data, error } = await supabaseClient.auth.getSession();
+
+  if (error) throw error;
+  if (!data.session) {
+    currentSession = null;
+    showAuth();
+    throw new Error("Your session expired. Please sign in again.");
+  }
+
+  currentSession = data.session;
+
+  const headers = new Headers(options.headers || {});
+  headers.set("Authorization", "Bearer " + data.session.access_token);
+
+  if (options.body && !(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/pdf")) {
+    if (!response.ok) throw new Error("The PDF request failed.");
+    return response.blob();
+  }
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(result.error || result.message || "Request failed.");
+  }
+
+  return result;
+}
+
+async function refreshUsage() {
+  try {
+    const result = await apiFetch("/usage");
+    const count = Number(result.chat_count ?? result.chatCount ?? 0);
+    const limit = Number(
+      result.daily_limit ?? result.dailyLimit ?? config.dailyChatLimit ?? 100
+    );
+
+    $("usageText").textContent = `${count} / ${limit} chats used today`;
+
+    const percentage = limit > 0
+      ? Math.min(100, (count / limit) * 100)
+      : 0;
+
+    $("usageFill").style.width = percentage + "%";
+  } catch (error) {
+    $("usageText").textContent = "Usage unavailable";
+    console.warn("Usage refresh failed:", error.message);
+  }
+}
+
+function addChatMessage(message, sender) {
+  const item = document.createElement("div");
+  item.className = "notice " + (sender === "user" ? "chat-user" : "chat-ai");
+  item.textContent = message;
+  $("chatMessages").appendChild(item);
+  $("chatMessages").scrollTop = $("chatMessages").scrollHeight;
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const value = String(reader.result || "");
+      const comma = value.indexOf(",");
+
+      if (comma < 0) {
+        reject(new Error("Could not read the selected file."));
+        return;
+      }
+
+      resolve(value.slice(comma + 1));
+    };
+
+    reader.onerror = () => reject(new Error("File reading failed."));
+    reader.readAsDataURL(file);
+  });
+}
+
+$("uploadBtn").addEventListener("click", () => $("imageInput").click());
+
+$("imageInput").addEventListener("change", () => {
+  const file = $("imageInput").files?.[0];
+  if (!file) return;
+
+  const allowed = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "application/pdf"
+  ];
+
+  if (!allowed.includes(file.type) && !file.name.toLowerCase().endsWith(".pdf")) {
+    showNotice("chatNotice", "Choose a supported image or PDF file.", "error");
+    $("imageInput").value = "";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    showNotice("chatNotice", "File must be 5 MB or smaller.", "error");
+    $("imageInput").value = "";
+    return;
+  }
+
+  selectedFile = file;
+  $("filePreviewName").textContent = file.name;
+  $("filePreview").classList.remove("hidden");
+  hideNotice("chatNotice");
+});
+
+$("removeFileBtn").addEventListener("click", () => {
+  selectedFile = null;
+  $("imageInput").value = "";
+  $("filePreview").classList.add("hidden");
+});
+
+$("chatForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const message = $("chatInput").value.trim();
+  if (!message && !selectedFile) {
+    showNotice("chatNotice", "Enter a question or attach a file.", "error");
+    return;
+  }
+
+  const button = $("sendBtn");
+  button.disabled = true;
+  button.textContent = "Working…";
+  hideNotice("chatNotice");
+
+  if (message) addChatMessage(message, "user");
+  if (selectedFile) addChatMessage("Attached file: " + selectedFile.name, "user");
+
+  try {
+    const payload = { message };
+
+    if (selectedFile) {
+      const data = await fileToBase64(selectedFile);
+
+      if (selectedFile.type === "application/pdf" ||
+          selectedFile.name.toLowerCase().endsWith(".pdf")) {
+        payload.pdf = {
+          data,
+          mimeType: "application/pdf",
+          name: selectedFile.name
+        };
+      } else {
+        payload.image = {
+          data,
+          mimeType: selectedFile.type
+        };
+      }
+    }
+
+    const result = await apiFetch("/ask", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    const reply = result.reply || result.message || "No response received.";
+    addChatMessage(reply, "ai");
+
+    if (result.pdf) {
+      showNotice(
+        "chatNotice",
+        "The server returned a PDF attachment, but its response format needs to be connected to the download handler.",
+        "success"
+      );
+    }
+
+    if (voiceEnabled) speakReply(reply);
+
+    $("chatInput").value = "";
+    selectedFile = null;
+    $("imageInput").value = "";
+    $("filePreview").classList.add("hidden");
+
+    await refreshUsage();
+  } catch (error) {
+    showNotice("chatNotice", error.message || "Chat request failed.", "error");
+    addChatMessage("Request failed: " + error.message, "ai");
+    await refreshUsage();
+  } finally {
+    button.disabled = false;
+    button.textContent = "Send message";
+  }
+});
+
+function speakReply(text) {
+  if (!("speechSynthesis" in window)) {
+    showNotice("chatNotice", "Speech is not supported in this browser.", "error");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = 0.95;
+  utterance.pitch = 1;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+$("voiceToggleBtn").addEventListener("click", () => {
+  voiceEnabled = !voiceEnabled;
+  $("voiceToggleBtn").textContent =
+    voiceEnabled ? "🔊 Voice on" : "🔇 Voice off";
+
+  if (!voiceEnabled && "speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+});
+
+$("voiceInputBtn").addEventListener("click", () => {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    showNotice(
+      "chatNotice",
+      "Voice input is not supported in this browser. Try an updated Chrome browser.",
+      "error"
+    );
+    return;
+  }
+
+  if (recognition) {
+    recognition.stop();
+    recognition = null;
+    $("voiceInputBtn").textContent = "🎙 Dictate";
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.lang = "en-IN";
+  recognition.interimResults = false;
+  recognition.continuous = false;
+
+  recognition.onresult = event => {
+    const transcript = event.results[0][0].transcript;
+    const input = $("chatInput");
+    input.value = (input.value + " " + transcript).trim();
+  };
+
+  recognition.onerror = event => {
+    showNotice("chatNotice", "Voice input error: " + event.error, "error");
+  };
+
+  recognition.onend = () => {
+    recognition = null;
+    $("voiceInputBtn").textContent = "🎙 Dictate";
+  };
+
+  $("voiceInputBtn").textContent = "Listening…";
+  recognition.start();
+});
+
+async function loadRepairHistory() {
+  try {
+    const result = await apiFetch("/api/repairs");
+    const repairs = Array.isArray(result)
+      ? result
+      : (result.repairs || result.data || []);
+
+    const list = $("repairList");
+    list.replaceChildren();
+
+    if (!repairs.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "No saved repairs yet.";
+      list.appendChild(empty);
+      return;
+    }
+
+    for (const repair of repairs) {
+      const card = document.createElement("article");
+      card.className = "repair-card";
+
+      const title = document.createElement("h3");
+      title.textContent = repair.title || repair.device || "Repair record";
+      card.appendChild(title);
+
+      const device = document.createElement("p");
+      device.textContent = "Device: " + (repair.device || "Not specified");
+      card.appendChild(device);
+
+      const notes = document.createElement("p");
+      notes.textContent = repair.notes || repair.description || "";
+      card.appendChild(notes);
+
+      list.appendChild(card);
+    }
+  } catch (error) {
+    $("repairList").textContent = "Could not load repair history.";
+    showNotice("repairNotice", error.message, "error");
+  }
+}
+
+$("repairForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const title = $("repairTitle").value.trim();
+  const device = $("repairDevice").value.trim();
+  const notes = $("repairNotes").value.trim();
+
+  if (!title) {
+    showNotice("repairNotice", "Enter a repair title.", "error");
+    return;
+  }
+
+  try {
+    await apiFetch("/api/repairs", {
+      method: "POST",
+      body: JSON.stringify({ title, device, notes })
+    });
+
+    $("repairForm").reset();
+    showNotice("repairNotice", "Repair saved.", "success");
+    await loadRepairHistory();
+  } catch (error) {
+    showNotice("repairNotice", error.message, "error");
+  }
+});
+
+setAuthMode("signin");
 loadConfig();
 </script>
 </body>

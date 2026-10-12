@@ -77,19 +77,23 @@
     }
 
     .logo {
-      display: grid;
-      place-items: center;
-      width: 46px;
-      height: 46px;
-      flex-shrink: 0;
-      border: 1px solid #55eaff88;
-      border-radius: 14px;
-      background: #102a35;
-      color: var(--cyan);
-      font-size: 24px;
-      font-weight: 900;
-      box-shadow: 0 0 24px #55eaff18;
-    }
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid #55eaff88;
+  border-radius: 14px;
+  background: #080f16;
+  box-shadow: 0 0 24px #55eaff18;
+}
+
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
     .brand h1 {
       margin: 0;
@@ -277,7 +281,9 @@
 <body>
   <div id="authView" class="shell auth-wrap">
     <div class="brand" style="margin-bottom:18px">
-      <div class="logo">S</div>
+      <div class="logo">
+  <img src="/singam-logo.png" alt="SINGAM Technician AI">
+</div>
       <div>
         <h1>SINGAM</h1>
         <p>Technician AI • Repair shop assistant</p>
@@ -374,7 +380,9 @@
     <header class="panel" style="margin-bottom:18px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
         <div class="brand">
-          <div class="logo">S</div>
+          <div class="logo">
+  <img src="/singam-logo.png" alt="SINGAM Technician AI">
+</div>
           <div>
             <h1>SINGAM</h1>
             <p>Technician AI Command Center</p>

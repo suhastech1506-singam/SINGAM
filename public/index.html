@@ -737,42 +737,88 @@
       }
     }
 
+    // FIXED: Clear the input immediately after submitting.
+    // If the request fails, restore the old text only when the box is still empty.
+    // This avoids overwriting any new message typed while the request is running.
     $("chatForm").addEventListener("submit",async event=>{
       event.preventDefault();
+
       const message=$("chatInput").value.trim();
+
       if(!message&&!selectedFile){
-        showNotice("chatNotice","Enter a question or attach a file.","error");return;
+        showNotice("chatNotice","Enter a question or attach a file.","error");
+        return;
       }
-      const button=$("sendBtn");button.disabled=true;button.textContent="Working…";
+
+      const button=$("sendBtn");
+      button.disabled=true;
+      button.textContent="Working…";
       hideNotice("chatNotice");
+
       if(message)addChatMessage(message,"user");
       if(selectedFile)addChatMessage("Attached file: "+selectedFile.name,"user");
+
+      // Clear the textbox immediately when sending starts.
+      $("chatInput").value="";
+
       try{
         const payload={message};
+
         if(currentConversationId)payload.conversationId=currentConversationId;
+
         if(selectedFile){
           const data=await fileToBase64(selectedFile);
           const isPdf=selectedFile.type==="application/pdf"||selectedFile.name.toLowerCase().endsWith(".pdf");
-          if(isPdf)payload.pdf={data,mimeType:"application/pdf",name:selectedFile.name};
-          else payload.image={data,mimeType:selectedFile.type};
+
+          if(isPdf){
+            payload.pdf={data,mimeType:"application/pdf",name:selectedFile.name};
+          }else{
+            payload.image={data,mimeType:selectedFile.type};
+          }
         }
-        const result=await apiFetch("/ask",{method:"POST",body:JSON.stringify(payload)});
+
+        const result=await apiFetch("/ask",{
+          method:"POST",
+          body:JSON.stringify(payload)
+        });
+
         const reply=result.reply||result.message||"No response received.";
+
         if(result.conversationId)currentConversationId=result.conversationId;
+
         addChatMessage(reply,"ai");
+
         if(result.pdf){
           downloadBase64Pdf(result.pdf);
           showNotice("chatNotice","PDF report generated. Your download should begin shortly.","success");
         }
+
         if(voiceEnabled)speakReply(reply);
-        $("chatInput").value="";selectedFile=null;$("imageInput").value="";
+
+        // Do not clear chatInput here: the user may already have typed
+        // their next question while SINGAM was processing the previous one.
+        selectedFile=null;
+        $("imageInput").value="";
         $("filePreview").classList.add("hidden");
+
         await Promise.all([refreshUsage(),loadChatHistory()]);
+
       }catch(error){
+        // Restore the previous message only if the textbox is still empty.
+        // Never overwrite a newer message typed by the user.
+        if(message&&!$("chatInput").value.trim()){
+          $("chatInput").value=message;
+        }
+
         showNotice("chatNotice",error.message||"Chat request failed.","error");
         addChatMessage("Request failed: "+error.message,"ai");
+
         await refreshUsage();
-      }finally{button.disabled=false;button.textContent="Send message";}
+
+      }finally{
+        button.disabled=false;
+        button.textContent="Send message";
+      }
     });
 
     function speakReply(text){
@@ -784,65 +830,110 @@
       utterance.lang="en-US";utterance.rate=.95;utterance.pitch=1;
       window.speechSynthesis.speak(utterance);
     }
+
     $("voiceToggleBtn").addEventListener("click",()=>{
       voiceEnabled=!voiceEnabled;
       $("voiceToggleBtn").textContent=voiceEnabled?"🔊 Voice on":"🔇 Voice off";
       if(!voiceEnabled&&"speechSynthesis" in window)window.speechSynthesis.cancel();
     });
+
     $("voiceInputBtn").addEventListener("click",()=>{
       const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+
       if(!SpeechRecognition){
-        showNotice("chatNotice","Voice input is not supported in this browser. Try an updated Chrome browser.","error");return;
+        showNotice("chatNotice","Voice input is not supported in this browser. Try an updated Chrome browser.","error");
+        return;
       }
-      if(recognition){recognition.stop();recognition=null;$("voiceInputBtn").textContent="🎙 Dictate";return;}
+
+      if(recognition){
+        recognition.stop();
+        recognition=null;
+        $("voiceInputBtn").textContent="🎙 Dictate";
+        return;
+      }
+
       recognition=new SpeechRecognition();
-      recognition.lang="en-IN";recognition.interimResults=false;recognition.continuous=false;
+      recognition.lang="en-IN";
+      recognition.interimResults=false;
+      recognition.continuous=false;
+
       recognition.onresult=event=>{
         const transcript=event.results[0][0].transcript;
         $("chatInput").value=($("chatInput").value+" "+transcript).trim();
       };
+
       recognition.onerror=event=>showNotice("chatNotice","Voice input error: "+event.error,"error");
       recognition.onend=()=>{recognition=null;$("voiceInputBtn").textContent="🎙 Dictate";};
+
       $("voiceInputBtn").textContent="Listening…";
-      try{recognition.start();}
-      catch(error){recognition=null;$("voiceInputBtn").textContent="🎙 Dictate";showNotice("chatNotice","Could not start voice input. Please try again.","error");}
+
+      try{
+        recognition.start();
+      }catch(error){
+        recognition=null;
+        $("voiceInputBtn").textContent="🎙 Dictate";
+        showNotice("chatNotice","Could not start voice input. Please try again.","error");
+      }
     });
 
     async function loadRepairHistory(){
       try{
         const result=await apiFetch("/api/repairs");
         const repairs=Array.isArray(result)?result:(result.repairs||result.data||[]);
-        const list=$("repairList");list.replaceChildren();
+        const list=$("repairList");
+        list.replaceChildren();
+
         if(!repairs.length){
-          const empty=document.createElement("p");empty.className="muted";empty.textContent="No saved repairs yet.";list.appendChild(empty);return;
+          const empty=document.createElement("p");
+          empty.className="muted";
+          empty.textContent="No saved repairs yet.";
+          list.appendChild(empty);
+          return;
         }
+
         for(const repair of repairs){
-          const card=document.createElement("article");card.className="repair-card";
+          const card=document.createElement("article");
+          card.className="repair-card";
+
           const title=document.createElement("h3");
           title.textContent=repair.title||repair.device_type||repair.device||"Repair record";
           card.appendChild(title);
+
           const device=document.createElement("p");
           device.textContent="Device: "+(repair.device_type||repair.device||"Not specified");
           card.appendChild(device);
+
           const notes=document.createElement("p");
           notes.textContent=repair.complaint||repair.notes||repair.description||"";
           card.appendChild(notes);
+
           if(repair.diagnosis){
             const diagnosis=document.createElement("p");
             diagnosis.textContent="Diagnosis: "+repair.diagnosis;
             card.appendChild(diagnosis);
           }
+
           if(repair.report_number){
-            const report=document.createElement("p");report.textContent="Report: "+repair.report_number;card.appendChild(report);
+            const report=document.createElement("p");
+            report.textContent="Report: "+repair.report_number;
+            card.appendChild(report);
           }
+
           if(repair.status){
-            const status=document.createElement("p");status.textContent="Status: "+repair.status;card.appendChild(status);
+            const status=document.createElement("p");
+            status.textContent="Status: "+repair.status;
+            card.appendChild(status);
           }
+
           if(repair.id){
-            const pdfButton=document.createElement("button");pdfButton.type="button";pdfButton.className="btn";pdfButton.textContent="Download PDF";
+            const pdfButton=document.createElement("button");
+            pdfButton.type="button";
+            pdfButton.className="btn";
+            pdfButton.textContent="Download PDF";
             pdfButton.addEventListener("click",()=>downloadRepairPdf(repair.id,pdfButton));
             card.appendChild(pdfButton);
           }
+
           list.appendChild(card);
         }
       }catch(error){
@@ -853,24 +944,40 @@
 
     async function downloadRepairPdf(id,button){
       button.disabled=true;
+
       try{
         const blob=await apiFetch("/api/repairs/"+encodeURIComponent(id)+"/pdf");
         const url=URL.createObjectURL(blob);
-        const link=document.createElement("a");link.href=url;link.download="singam-repair-record.pdf";
-        document.body.appendChild(link);link.click();link.remove();
+        const link=document.createElement("a");
+        link.href=url;
+        link.download="singam-repair-record.pdf";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
         setTimeout(()=>URL.revokeObjectURL(url),1000);
-      }catch(error){showNotice("repairNotice",error.message||"Could not download repair PDF.","error");}
-      finally{button.disabled=false;}
+      }catch(error){
+        showNotice("repairNotice",error.message||"Could not download repair PDF.","error");
+      }finally{
+        button.disabled=false;
+      }
     }
 
     $("repairForm").addEventListener("submit",async event=>{
       event.preventDefault();
+
       const title=$("repairTitle").value.trim();
       const device=$("repairDevice").value.trim();
       const notes=$("repairNotes").value.trim();
-      if(!title){showNotice("repairNotice","Enter a repair title.","error");return;}
+
+      if(!title){
+        showNotice("repairNotice","Enter a repair title.","error");
+        return;
+      }
+
       const button=$("repairForm").querySelector('button[type="submit"]');
-      button.disabled=true;hideNotice("repairNotice");
+      button.disabled=true;
+      hideNotice("repairNotice");
+
       try{
         /* Match the field names expected by server.js cleanRepair(). */
         await apiFetch("/api/repairs",{
@@ -882,11 +989,16 @@
             diagnosis:notes
           })
         });
+
         $("repairForm").reset();
         showNotice("repairNotice","Repair saved.","success");
         await loadRepairHistory();
-      }catch(error){showNotice("repairNotice",error.message||"Could not save repair.","error");}
-      finally{button.disabled=false;}
+
+      }catch(error){
+        showNotice("repairNotice",error.message||"Could not save repair.","error");
+      }finally{
+        button.disabled=false;
+      }
     });
 
     setAuthMode("signin");

@@ -22,12 +22,24 @@ const DAILY_CHAT_LIMIT = Math.max(
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "openrouter/free";
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const MAX_REQUEST_BYTES = "8mb";
 const MAX_CHAT_MESSAGES = 20;
 const MAX_CHAT_TITLE_LENGTH = 80;
+const MAX_PDF_PAGES = 30;
+const MAX_PDF_TEXT_LENGTH = 30000;
+const MAX_MESSAGE_LENGTH = 12000;
 
-app.use(express.json({ limit: "8mb" }));
-app.use(express.urlencoded({ extended: true, limit: "8mb" }));
+app.disable("x-powered-by");
+
+app.use(express.json({ limit: MAX_REQUEST_BYTES }));
+app.use(express.urlencoded({
+  extended: true,
+  limit: MAX_REQUEST_BYTES,
+  parameterLimit: 100
+}));
 app.use(express.static(path.join(__dirname, "public")));
+
+/* GENERAL HELPERS */
 
 const clean = value => String(value ?? "").trim();
 
@@ -319,7 +331,7 @@ async function saveChatMessages(userId, conversationId, message, reply) {
       conversation_id: conversationId,
       user_id: userId,
       role: "user",
-      content: String(message || "Please analyze the uploaded file.").slice(0, 12000)
+      content: String(message || "Please analyze the uploaded file.").slice(0, MAX_MESSAGE_LENGTH)
     },
     {
       conversation_id: conversationId,
@@ -546,27 +558,93 @@ ${pdfText || "No PDF attached."}
 Use saved memory only when relevant to the current request.`;
 }
 
-/* IMAGE AND PDF ATTACHMENTS */
+/* SECURE IMAGE AND PDF ATTACHMENTS */
 
 function decodeBase64(value) {
   if (typeof value !== "string" || !value.trim()) {
     throw new Error("The uploaded file is empty.");
   }
 
-  const base64 = value.replace(/^data:[^,]*;base64,/i, "").trim();
+  let base64 = value.trim();
 
-  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(base64)) {
-    throw new Error("Invalid file data.");
+  // Permit Base64 data URLs, but never trust their MIME declaration.
+  if (/^data:/i.test(base64)) {
+    const comma = base64.indexOf(",");
+    if (comma === -1) {
+      throw new Error("Invalid file data URL.");
+    }
+    base64 = base64.slice(comma + 1);
+  }
+
+  // Reject malformed Base64 before decoding.
+  if (
+    !base64 ||
+    base64.length % 4 !== 0 ||
+    !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(base64)
+  ) {
+    throw new Error("Invalid Base64 file data.");
+  }
+
+  const estimatedBytes = (base64.length / 4) * 3 -
+    (base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0);
+
+  if (estimatedBytes <= 0) {
+    throw new Error("The uploaded file is empty.");
+  }
+
+  if (estimatedBytes > MAX_FILE_BYTES) {
+    throw new Error("Maximum file size is 5 MB.");
   }
 
   const buffer = Buffer.from(base64, "base64");
 
-  if (!buffer.length) throw new Error("The uploaded file is empty.");
+  // Node's decoder is permissive; require canonical Base64.
+  if (buffer.toString("base64") !== base64) {
+    throw new Error("Invalid Base64 file encoding.");
+  }
+
   if (buffer.length > MAX_FILE_BYTES) {
     throw new Error("Maximum file size is 5 MB.");
   }
 
   return buffer;
+}
+
+function detectImageMimeType(buffer) {
+  if (
+    buffer.length >= 3 &&
+    buffer[0] === 0xff &&
+    buffer[1] === 0xd8 &&
+    buffer[2] === 0xff
+  ) {
+    return "image/jpeg";
+  }
+
+  if (
+    buffer.length >= 8 &&
+    buffer.subarray(0, 8).equals(
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+    )
+  ) {
+    return "image/png";
+  }
+
+  if (
+    buffer.length >= 6 &&
+    ["GIF87a", "GIF89a"].includes(buffer.toString("ascii", 0, 6))
+  ) {
+    return "image/gif";
+  }
+
+  if (
+    buffer.length >= 12 &&
+    buffer.toString("ascii", 0, 4) === "RIFF" &&
+    buffer.toString("ascii", 8, 12) === "WEBP"
+  ) {
+    return "image/webp";
+  }
+
+  return null;
 }
 
 function getImage(body) {
@@ -580,22 +658,49 @@ function getImage(body) {
     value = value.data || value.base64 || "";
   }
 
-  const match = String(value).match(
-    /^data:(image\/(?:jpeg|png|webp|gif));base64,/i
-  );
-
-  if (match) {
-    mimeType = match[1].toLowerCase();
-    value = value.replace(/^data:[^,]*;base64,/i, "");
+  if (typeof value !== "string") {
+    throw new Error("Invalid image data.");
   }
 
-  if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(mimeType)) {
+  const dataUrlMatch = value.match(/^data:([^;,]+);base64,/i);
+
+  if (dataUrlMatch) {
+    const dataUrlMime = dataUrlMatch[1].toLowerCase();
+
+    if (String(mimeType).toLowerCase() !== dataUrlMime) {
+      throw new Error("Image MIME type does not match the data URL.");
+    }
+
+    value = value.slice(dataUrlMatch[0].length);
+  }
+
+  mimeType = String(mimeType).toLowerCase();
+
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif"
+  ];
+
+  if (!allowedMimeTypes.includes(mimeType)) {
     throw new Error("Supported images: JPG, PNG, WEBP and GIF.");
   }
 
+  const buffer = decodeBase64(value);
+  const actualMimeType = detectImageMimeType(buffer);
+
+  if (!actualMimeType) {
+    throw new Error("The file is not a supported image or has an invalid signature.");
+  }
+
+  if (actualMimeType !== mimeType) {
+    throw new Error("The image content does not match its declared file type.");
+  }
+
   return {
-    mimeType,
-    base64: decodeBase64(value).toString("base64")
+    mimeType: actualMimeType,
+    base64: buffer.toString("base64")
   };
 }
 
@@ -608,13 +713,27 @@ async function getPdfText(body) {
     value = value.data || value.base64 || "";
   }
 
-  const parsed = await pdfParse(decodeBase64(value));
+  const buffer = decodeBase64(value);
 
-  if (parsed.numpages > 30) {
+  // Require a PDF signature near the beginning of the document.
+  const header = buffer.subarray(0, Math.min(buffer.length, 1024));
+
+  if (!header.includes(Buffer.from("%PDF-", "ascii"))) {
+    throw new Error("The uploaded file is not a valid PDF.");
+  }
+
+  // This is a parsing limit, not a malware scanner.
+  const parsed = await pdfParse(buffer, { max: MAX_PDF_PAGES + 1 });
+
+  if (parsed.numpages > MAX_PDF_PAGES) {
     throw new Error("PDF maximum supported length is 30 pages.");
   }
 
-  const text = clean(parsed.text).slice(0, 30000);
+  if (!Number.isInteger(parsed.numpages) || parsed.numpages < 1) {
+    throw new Error("The PDF has no valid pages.");
+  }
+
+  const text = clean(parsed.text).slice(0, MAX_PDF_TEXT_LENGTH);
 
   return text ||
     "No selectable text was found. This may be a scanned PDF; OCR is not enabled.";
@@ -998,7 +1117,9 @@ app.get("/health", (req, res) => {
     features: [
       "Technician troubleshooting",
       "Image analysis",
+      "Secure image signature validation",
       "PDF text extraction",
+      "PDF upload size and page limits",
       "Formatted PDF reports",
       "Supabase Smart Recall",
       "Supabase Repair History",
@@ -1042,6 +1163,13 @@ app.post("/ask", authenticate, async (req, res) => {
   try {
     const body = req.body || {};
     const message = clean(body.message || body.command);
+
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return res.status(400).json({
+        error: "Message is too long. Please keep it under 12,000 characters."
+      });
+    }
+
     const image = getImage(body);
     const pdfText = await getPdfText(body);
 
@@ -1086,7 +1214,6 @@ app.post("/ask", authenticate, async (req, res) => {
       content: buildSystemPrompt(message, memory, pdfText)
     }];
 
-    /* Load earlier messages only from this user's selected conversation. */
     if (conversation) {
       const previous = await supabaseRequest("chat_messages", {
         query: {
@@ -1107,7 +1234,7 @@ app.post("/ask", authenticate, async (req, res) => {
         ) {
           messages.push({
             role: item.role,
-            content: item.content.slice(0, 12000)
+            content: item.content.slice(0, MAX_MESSAGE_LENGTH)
           });
         }
       }
@@ -1150,7 +1277,6 @@ app.post("/ask", authenticate, async (req, res) => {
 
     const reply = await askOpenRouter(messages);
 
-    /* Create a conversation only after the AI successfully responds. */
     if (!conversation) {
       conversation = await createChat(
         req.user.id,
@@ -1201,8 +1327,13 @@ app.post("/ask", authenticate, async (req, res) => {
   } catch (error) {
     console.error("Ask route error:", error.message);
 
-    return res.status(/rate-limited/i.test(error.message) ? 429 : 500).json({
-      error: error.message || "SINGAM could not complete the request."
+    const message = error.message || "SINGAM could not complete the request.";
+
+    const isClientFileError =
+      /uploaded file|file data|base64|image|pdf|maximum file size|maximum supported length|too many pages|invalid file/i.test(message);
+
+    return res.status(isClientFileError ? 400 : /rate-limited/i.test(message) ? 429 : 500).json({
+      error: message
     });
   }
 });
@@ -1218,9 +1349,30 @@ app.use("/api", (req, res) => {
 /* GLOBAL ERROR HANDLER */
 
 app.use((error, req, res, next) => {
-  console.error("Server error:", error.message);
-
   if (res.headersSent) return next(error);
+
+  if (
+    error?.type === "entity.too.large" ||
+    error?.status === 413
+  ) {
+    return res.status(413).json({
+      error: "Request is too large. Files must be 5 MB or smaller, and the total request must fit within the 8 MB limit."
+    });
+  }
+
+  if (error?.type === "entity.parse.failed") {
+    return res.status(400).json({
+      error: "Invalid JSON request body."
+    });
+  }
+
+  if (error?.type === "encoding.unsupported") {
+    return res.status(415).json({
+      error: "Unsupported request encoding."
+    });
+  }
+
+  console.error("Server error:", error.message);
 
   return res.status(500).json({
     error: "Unexpected server error."

@@ -8,21 +8,33 @@ const PDFDocument = require("pdfkit");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 const SUPABASE_URL = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
 const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || "";
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY || "";
 const SINGAM_API_KEY = process.env.SINGAM_API_KEY || "";
-const DAILY_CHAT_LIMIT = Math.max(1, Number.parseInt(process.env.DAILY_CHAT_LIMIT || "100", 10) || 100);
+
+const DAILY_CHAT_LIMIT = Math.max(
+  1,
+  Number.parseInt(process.env.DAILY_CHAT_LIMIT || "100", 10) || 100
+);
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "openrouter/free";
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const MAX_CHAT_MESSAGES = 20;
+const MAX_CHAT_TITLE_LENGTH = 80;
 
 app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: true, limit: "8mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 const clean = value => String(value ?? "").trim();
+
+function isUuid(value) {
+  return typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
 
 function todayIndia() {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -32,9 +44,14 @@ function todayIndia() {
     day: "2-digit"
   }).formatToParts(new Date());
 
-  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  const values = Object.fromEntries(
+    parts.map(part => [part.type, part.value])
+  );
+
   return `${values.year}-${values.month}-${values.day}`;
 }
+
+/* SUPABASE REQUEST */
 
 async function supabaseRequest(table, options = {}) {
   if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
@@ -47,15 +64,22 @@ async function supabaseRequest(table, options = {}) {
     url.search = new URLSearchParams(options.query).toString();
   }
 
+  const headers = {
+    apikey: SUPABASE_SECRET_KEY,
+    Authorization: `Bearer ${SUPABASE_SECRET_KEY}`,
+    "Content-Type": "application/json"
+  };
+
+  if (options.prefer !== false) {
+    headers.Prefer = options.prefer || "return=representation";
+  }
+
   const response = await fetch(url, {
     method: options.method || "GET",
-    headers: {
-      apikey: SUPABASE_SECRET_KEY,
-      Authorization: `Bearer ${SUPABASE_SECRET_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: options.prefer || "return=representation"
-    },
-    body: options.body === undefined ? undefined : JSON.stringify(options.body)
+    headers,
+    body: options.body === undefined
+      ? undefined
+      : JSON.stringify(options.body)
   });
 
   const text = await response.text();
@@ -67,23 +91,31 @@ async function supabaseRequest(table, options = {}) {
 
   if (!response.ok) {
     console.error("Supabase error:", response.status, data || text);
-    throw new Error(data?.message || `Supabase returned HTTP ${response.status}.`);
+    throw new Error(
+      data?.message || `Supabase returned HTTP ${response.status}.`
+    );
   }
 
   return data;
 }
 
+/* AUTHENTICATION */
+
 async function authenticate(req, res, next) {
   try {
     if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-      return res.status(503).json({ error: "Supabase is not configured." });
+      return res.status(503).json({
+        error: "Supabase is not configured."
+      });
     }
 
     const match = String(req.headers.authorization || "")
       .match(/^Bearer\s+(.+)$/i);
 
     if (!match) {
-      return res.status(401).json({ error: "Please sign in first." });
+      return res.status(401).json({
+        error: "Please sign in first."
+      });
     }
 
     const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
@@ -102,19 +134,23 @@ async function authenticate(req, res, next) {
     const user = await response.json();
 
     if (!user?.id) {
-      return res.status(401).json({ error: "Could not verify your account." });
+      return res.status(401).json({
+        error: "Could not verify your account."
+      });
     }
 
     req.user = user;
     req.accessToken = match[1];
-    next();
+    return next();
   } catch (error) {
     console.error("Authentication error:", error.message);
-    res.status(503).json({ error: "Unable to verify your session." });
+    return res.status(503).json({
+      error: "Unable to verify your session."
+    });
   }
 }
 
-/* DAILY CHAT USAGE */
+/* DAILY USAGE */
 
 async function consumeDailyChat(userId) {
   const response = await fetch(
@@ -161,7 +197,9 @@ async function getUsage(userId, token) {
     }
   );
 
-  if (!response.ok) throw new Error("Could not load daily usage.");
+  if (!response.ok) {
+    throw new Error("Could not load daily usage.");
+  }
 
   const rows = await response.json();
   const count = Number(rows?.[0]?.chat_count || 0);
@@ -174,7 +212,7 @@ async function getUsage(userId, token) {
   };
 }
 
-/* SMART RECALL — SUPABASE, SEPARATE FOR EACH USER */
+/* SMART RECALL */
 
 async function getRelevantMemory(userId, message) {
   if (!clean(message)) return "";
@@ -232,6 +270,220 @@ async function saveConversation(userId, message, reply) {
     console.error("Smart Recall save failed:", error.message);
   }
 }
+
+/* CHAT HISTORY HELPERS */
+
+function makeChatTitle(message) {
+  const title = clean(message)
+    .replace(/\s+/g, " ")
+    .slice(0, MAX_CHAT_TITLE_LENGTH);
+
+  return title || "New chat";
+}
+
+async function getOwnedChat(conversationId, userId) {
+  if (!isUuid(conversationId)) return null;
+
+  const rows = await supabaseRequest("chat_conversations", {
+    query: {
+      select: "id,user_id,title,created_at,updated_at",
+      id: `eq.${conversationId}`,
+      user_id: `eq.${userId}`,
+      limit: "1"
+    }
+  });
+
+  return rows?.[0] || null;
+}
+
+async function createChat(userId, title) {
+  const rows = await supabaseRequest("chat_conversations", {
+    method: "POST",
+    body: {
+      user_id: userId,
+      title: makeChatTitle(title),
+      updated_at: new Date().toISOString()
+    }
+  });
+
+  if (!rows?.[0]?.id) {
+    throw new Error("Could not create chat conversation.");
+  }
+
+  return rows[0];
+}
+
+async function saveChatMessages(userId, conversationId, message, reply) {
+  const messages = [
+    {
+      conversation_id: conversationId,
+      user_id: userId,
+      role: "user",
+      content: String(message || "Please analyze the uploaded file.").slice(0, 12000)
+    },
+    {
+      conversation_id: conversationId,
+      user_id: userId,
+      role: "assistant",
+      content: String(reply || "").slice(0, 20000)
+    }
+  ];
+
+  await supabaseRequest("chat_messages", {
+    method: "POST",
+    body: messages
+  });
+
+  await supabaseRequest("chat_conversations", {
+    method: "PATCH",
+    query: {
+      id: `eq.${conversationId}`,
+      user_id: `eq.${userId}`
+    },
+    body: {
+      updated_at: new Date().toISOString()
+    },
+    prefer: "return=minimal"
+  });
+}
+
+/* CHAT HISTORY APIs */
+
+app.get("/api/chats", authenticate, async (req, res) => {
+  try {
+    const chats = await supabaseRequest("chat_conversations", {
+      query: {
+        select: "id,title,created_at,updated_at",
+        user_id: `eq.${req.user.id}`,
+        order: "updated_at.desc",
+        limit: "100"
+      }
+    });
+
+    return res.json({ chats: chats || [] });
+  } catch (error) {
+    console.error("Load chats:", error.message);
+    return res.status(500).json({
+      error: "Could not load Chat History."
+    });
+  }
+});
+
+app.post("/api/chats", authenticate, async (req, res) => {
+  try {
+    const title = makeChatTitle(req.body?.title || "New chat");
+    const chat = await createChat(req.user.id, title);
+
+    return res.status(201).json({ chat });
+  } catch (error) {
+    console.error("Create chat:", error.message);
+    return res.status(500).json({
+      error: "Could not create a new chat."
+    });
+  }
+});
+
+app.get("/api/chats/:id/messages", authenticate, async (req, res) => {
+  try {
+    const chat = await getOwnedChat(req.params.id, req.user.id);
+
+    if (!chat) {
+      return res.status(404).json({
+        error: "Chat not found."
+      });
+    }
+
+    const messages = await supabaseRequest("chat_messages", {
+      query: {
+        select: "id,conversation_id,role,content,created_at",
+        conversation_id: `eq.${chat.id}`,
+        user_id: `eq.${req.user.id}`,
+        order: "created_at.asc",
+        limit: "1000"
+      }
+    });
+
+    return res.json({
+      chat,
+      messages: messages || []
+    });
+  } catch (error) {
+    console.error("Load chat messages:", error.message);
+    return res.status(500).json({
+      error: "Could not load this conversation."
+    });
+  }
+});
+
+app.patch("/api/chats/:id", authenticate, async (req, res) => {
+  try {
+    const title = clean(req.body?.title);
+
+    if (!title) {
+      return res.status(400).json({
+        error: "Chat title cannot be empty."
+      });
+    }
+
+    const rows = await supabaseRequest("chat_conversations", {
+      method: "PATCH",
+      query: {
+        id: `eq.${req.params.id}`,
+        user_id: `eq.${req.user.id}`,
+        select: "id,title,created_at,updated_at"
+      },
+      body: {
+        title: title.slice(0, MAX_CHAT_TITLE_LENGTH),
+        updated_at: new Date().toISOString()
+      }
+    });
+
+    if (!rows?.length) {
+      return res.status(404).json({
+        error: "Chat not found."
+      });
+    }
+
+    return res.json({ chat: rows[0] });
+  } catch (error) {
+    console.error("Rename chat:", error.message);
+    return res.status(500).json({
+      error: "Could not rename this chat."
+    });
+  }
+});
+
+app.delete("/api/chats/:id", authenticate, async (req, res) => {
+  try {
+    if (!isUuid(req.params.id)) {
+      return res.status(400).json({
+        error: "Invalid chat ID."
+      });
+    }
+
+    const rows = await supabaseRequest("chat_conversations", {
+      method: "DELETE",
+      query: {
+        id: `eq.${req.params.id}`,
+        user_id: `eq.${req.user.id}`,
+        select: "id"
+      }
+    });
+
+    if (!rows?.length) {
+      return res.status(404).json({
+        error: "Chat not found."
+      });
+    }
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Delete chat:", error.message);
+    return res.status(500).json({
+      error: "Could not delete this chat."
+    });
+  }
+});
 
 /* TECHNICIAN AI MODES */
 
@@ -310,7 +562,9 @@ function decodeBase64(value) {
   const buffer = Buffer.from(base64, "base64");
 
   if (!buffer.length) throw new Error("The uploaded file is empty.");
-  if (buffer.length > MAX_FILE_BYTES) throw new Error("Maximum file size is 5 MB.");
+  if (buffer.length > MAX_FILE_BYTES) {
+    throw new Error("Maximum file size is 5 MB.");
+  }
 
   return buffer;
 }
@@ -326,7 +580,9 @@ function getImage(body) {
     value = value.data || value.base64 || "";
   }
 
-  const match = String(value).match(/^data:(image\/(?:jpeg|png|webp|gif));base64,/i);
+  const match = String(value).match(
+    /^data:(image\/(?:jpeg|png|webp|gif));base64,/i
+  );
 
   if (match) {
     mimeType = match[1].toLowerCase();
@@ -348,7 +604,9 @@ async function getPdfText(body) {
 
   if (!value) return "";
 
-  if (typeof value === "object") value = value.data || value.base64 || "";
+  if (typeof value === "object") {
+    value = value.data || value.base64 || "";
+  }
 
   const parsed = await pdfParse(decodeBase64(value));
 
@@ -358,10 +616,11 @@ async function getPdfText(body) {
 
   const text = clean(parsed.text).slice(0, 30000);
 
-  return text || "No selectable text was found. This may be a scanned PDF; OCR is not enabled.";
+  return text ||
+    "No selectable text was found. This may be a scanned PDF; OCR is not enabled.";
 }
 
-/* FORMATTED PDF REPORT */
+/* PDF GENERATION */
 
 function createPdf(reportText, title = "TECHNICAL REPAIR REPORT") {
   return new Promise((resolve, reject) => {
@@ -372,20 +631,26 @@ function createPdf(reportText, title = "TECHNICAL REPAIR REPORT") {
     });
 
     const chunks = [];
+
     doc.on("data", chunk => chunks.push(chunk));
     doc.on("error", reject);
     doc.on("end", () => resolve(Buffer.concat(chunks)));
 
-    doc.fillColor("#087E8B").font("Helvetica-Bold").fontSize(18)
+    doc.fillColor("#087E8B")
+      .font("Helvetica-Bold")
+      .fontSize(18)
       .text("SINGAM TECHNICIAN AI", { align: "center" });
 
     doc.moveDown(0.3);
-    doc.fillColor("#17232C").fontSize(12)
+    doc.fillColor("#17232C")
+      .fontSize(12)
       .text(title, { align: "center" });
 
     doc.moveDown();
 
-    const lines = String(reportText || "").replace(/\r/g, "").split("\n");
+    const lines = String(reportText || "")
+      .replace(/\r/g, "")
+      .split("\n");
 
     for (const raw of lines) {
       const line = raw.trim();
@@ -404,17 +669,23 @@ function createPdf(reportText, title = "TECHNICAL REPAIR REPORT") {
 
       if (/^#{1,3}\s+/.test(line)) {
         doc.moveDown(0.3);
-        doc.fillColor("#087E8B").font("Helvetica-Bold").fontSize(12)
+        doc.fillColor("#087E8B")
+          .font("Helvetica-Bold")
+          .fontSize(12)
           .text(cleanLine);
         doc.moveDown(0.15);
       } else if (/^[-*•]\s+/.test(line) || /^\d+[.)]\s+/.test(line)) {
-        doc.fillColor("#17232C").font("Helvetica").fontSize(10)
+        doc.fillColor("#17232C")
+          .font("Helvetica")
+          .fontSize(10)
           .text("•  " + cleanLine.replace(/^([-*•]|\d+[.)])\s+/, ""), {
             indent: 10,
             lineGap: 2
           });
       } else {
-        doc.fillColor("#17232C").font("Helvetica").fontSize(10)
+        doc.fillColor("#17232C")
+          .font("Helvetica")
+          .fontSize(10)
           .text(cleanLine, { lineGap: 3 });
       }
     }
@@ -424,7 +695,9 @@ function createPdf(reportText, title = "TECHNICAL REPAIR REPORT") {
 }
 
 async function askOpenRouter(messages) {
-  if (!SINGAM_API_KEY) throw new Error("SINGAM_API_KEY is missing from server environment.");
+  if (!SINGAM_API_KEY) {
+    throw new Error("SINGAM_API_KEY is missing from server environment.");
+  }
 
   const response = await fetch(OPENROUTER_URL, {
     method: "POST",
@@ -453,7 +726,10 @@ async function askOpenRouter(messages) {
       throw new Error("AI provider rejected the server credentials. Check the server environment.");
     }
 
-    throw new Error(result?.error?.message || `AI provider returned HTTP ${response.status}.`);
+    throw new Error(
+      result?.error?.message ||
+      `AI provider returned HTTP ${response.status}.`
+    );
   }
 
   const reply = result?.choices?.[0]?.message?.content;
@@ -467,41 +743,74 @@ async function askOpenRouter(messages) {
 
 /* REPAIR HISTORY */
 
-const allowedStatuses = ["pending", "in_progress", "completed", "unable_to_repair"];
+const allowedStatuses = [
+  "pending",
+  "in_progress",
+  "completed",
+  "unable_to_repair"
+];
 
 function cleanRepair(body, partial = false) {
   const result = {};
 
+  const aliases = {
+    device_type: body.device_type ?? body.device,
+    complaint: body.complaint ?? body.notes,
+    brand_model: body.brand_model ?? body.model
+  };
+
   for (const field of [
-    "customer_name", "device_type", "brand_model", "complaint",
-    "diagnosis", "repair_actions", "parts_used", "cost", "status"
+    "customer_name",
+    "device_type",
+    "brand_model",
+    "complaint",
+    "diagnosis",
+    "repair_actions",
+    "parts_used",
+    "cost",
+    "status"
   ]) {
-    if (body[field] === undefined) continue;
+    let value = body[field];
+
+    if (field in aliases) {
+      value = aliases[field];
+    }
+
+    if (value === undefined) continue;
 
     if (field === "cost") {
-      if (body[field] === "" || body[field] === null) {
+      if (value === "" || value === null) {
         result.cost = null;
       } else {
-        const cost = Number(body[field]);
+        const cost = Number(value);
+
         if (!Number.isFinite(cost) || cost < 0) {
           throw new Error("Cost must be a valid non-negative number.");
         }
+
         result.cost = cost;
       }
     } else if (field === "status") {
-      if (!allowedStatuses.includes(body.status)) {
+      if (!allowedStatuses.includes(value)) {
         throw new Error("Invalid repair status.");
       }
-      result.status = body.status;
+
+      result.status = value;
     } else {
       const maxLength = field === "device_type" ? 100 : 10000;
-      result[field] = clean(body[field]).slice(0, maxLength) || null;
+      result[field] = clean(value).slice(0, maxLength) || null;
     }
   }
 
   if (!partial) {
-    if (!result.device_type) throw new Error("Device type is required.");
-    if (!result.complaint) throw new Error("Customer complaint is required.");
+    if (!result.device_type) {
+      throw new Error("Device type is required.");
+    }
+
+    if (!result.complaint) {
+      throw new Error("Customer complaint is required.");
+    }
+
     if (!result.status) result.status = "pending";
   }
 
@@ -527,16 +836,20 @@ app.get("/api/repairs", authenticate, async (req, res) => {
     }
 
     const repairs = await supabaseRequest("repair_history", { query });
-    res.json({ repairs: repairs || [] });
+
+    return res.json({ repairs: repairs || [] });
   } catch (error) {
     console.error("Load repairs:", error.message);
-    res.status(500).json({ error: "Could not load Repair History. Check Supabase configuration." });
+    return res.status(500).json({
+      error: "Could not load Repair History. Check Supabase configuration."
+    });
   }
 });
 
 app.post("/api/repairs", authenticate, async (req, res) => {
   try {
     const input = cleanRepair(req.body || {});
+
     const rows = await supabaseRequest("repair_history", {
       method: "POST",
       body: {
@@ -546,19 +859,27 @@ app.post("/api/repairs", authenticate, async (req, res) => {
       }
     });
 
-    res.status(201).json({ repair: rows?.[0] || null });
+    return res.status(201).json({ repair: rows?.[0] || null });
   } catch (error) {
     console.error("Create repair:", error.message);
-    res.status(400).json({ error: error.message || "Could not save repair." });
+    return res.status(400).json({
+      error: error.message || "Could not save repair."
+    });
   }
 });
 
 app.patch("/api/repairs/:id", authenticate, async (req, res) => {
   try {
+    if (!isUuid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid repair ID." });
+    }
+
     const input = cleanRepair(req.body || {}, true);
 
     if (!Object.keys(input).length) {
-      return res.status(400).json({ error: "No editable fields provided." });
+      return res.status(400).json({
+        error: "No editable fields provided."
+      });
     }
 
     const rows = await supabaseRequest("repair_history", {
@@ -568,22 +889,31 @@ app.patch("/api/repairs/:id", authenticate, async (req, res) => {
         user_id: `eq.${req.user.id}`,
         select: "*"
       },
-      body: { ...input, updated_at: new Date().toISOString() }
+      body: {
+        ...input,
+        updated_at: new Date().toISOString()
+      }
     });
 
     if (!rows?.length) {
       return res.status(404).json({ error: "Repair record not found." });
     }
 
-    res.json({ repair: rows[0] });
+    return res.json({ repair: rows[0] });
   } catch (error) {
     console.error("Update repair:", error.message);
-    res.status(400).json({ error: error.message || "Could not update repair." });
+    return res.status(400).json({
+      error: error.message || "Could not update repair."
+    });
   }
 });
 
 app.delete("/api/repairs/:id", authenticate, async (req, res) => {
   try {
+    if (!isUuid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid repair ID." });
+    }
+
     const rows = await supabaseRequest("repair_history", {
       method: "DELETE",
       query: {
@@ -597,15 +927,21 @@ app.delete("/api/repairs/:id", authenticate, async (req, res) => {
       return res.status(404).json({ error: "Repair record not found." });
     }
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (error) {
     console.error("Delete repair:", error.message);
-    res.status(500).json({ error: "Could not delete repair record." });
+    return res.status(500).json({
+      error: "Could not delete repair record."
+    });
   }
 });
 
 app.get("/api/repairs/:id/pdf", authenticate, async (req, res) => {
   try {
+    if (!isUuid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid repair ID." });
+    }
+
     const rows = await supabaseRequest("repair_history", {
       query: {
         select: "*",
@@ -617,7 +953,9 @@ app.get("/api/repairs/:id/pdf", authenticate, async (req, res) => {
 
     const repair = rows?.[0];
 
-    if (!repair) return res.status(404).json({ error: "Repair record not found." });
+    if (!repair) {
+      return res.status(404).json({ error: "Repair record not found." });
+    }
 
     const text = [
       `Report number: ${repair.report_number}`,
@@ -638,20 +976,23 @@ app.get("/api/repairs/:id/pdf", authenticate, async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${String(repair.report_number || "repair").replace(/[^A-Za-z0-9_-]/g, "")}.pdf"`
+      `attachment; filename="${String(repair.report_number || "repair")
+        .replace(/[^A-Za-z0-9_-]/g, "")}.pdf"`
     );
 
-    res.send(pdf);
+    return res.send(pdf);
   } catch (error) {
     console.error("Repair PDF:", error.message);
-    res.status(500).json({ error: "Could not generate repair PDF." });
+    return res.status(500).json({
+      error: "Could not generate repair PDF."
+    });
   }
 });
 
 /* HEALTH, CONFIG AND USAGE */
 
 app.get("/health", (req, res) => {
-  res.json({
+  return res.json({
     status: "ok",
     service: "SINGAM Technician AI",
     features: [
@@ -661,13 +1002,14 @@ app.get("/health", (req, res) => {
       "Formatted PDF reports",
       "Supabase Smart Recall",
       "Supabase Repair History",
+      "Chat History",
       "Daily usage limits"
     ]
   });
 });
 
 app.get("/config", (req, res) => {
-  res.json({
+  return res.json({
     supabaseUrl: SUPABASE_URL,
     supabasePublishableKey: SUPABASE_PUBLISHABLE_KEY,
     dailyChatLimit: DAILY_CHAT_LIMIT,
@@ -677,6 +1019,7 @@ app.get("/config", (req, res) => {
       pdfReportGeneration: true,
       smartRecall: true,
       repairHistory: true,
+      chatHistory: true,
       dailyUsage: true
     }
   });
@@ -684,14 +1027,16 @@ app.get("/config", (req, res) => {
 
 app.get("/usage", authenticate, async (req, res) => {
   try {
-    res.json(await getUsage(req.user.id, req.accessToken));
+    return res.json(await getUsage(req.user.id, req.accessToken));
   } catch (error) {
     console.error("Usage error:", error.message);
-    res.status(500).json({ error: "Could not load daily usage." });
+    return res.status(500).json({
+      error: "Could not load daily usage."
+    });
   }
 });
 
-/* MAIN AI ROUTE */
+/* MAIN AI ROUTE WITH CHAT HISTORY */
 
 app.post("/ask", authenticate, async (req, res) => {
   try {
@@ -704,6 +1049,28 @@ app.post("/ask", authenticate, async (req, res) => {
       return res.status(400).json({
         error: "Enter a message or attach an image/PDF."
       });
+    }
+
+    let conversation = null;
+    const requestedConversationId = clean(body.conversationId);
+
+    if (requestedConversationId) {
+      if (!isUuid(requestedConversationId)) {
+        return res.status(400).json({
+          error: "Invalid conversation ID."
+        });
+      }
+
+      conversation = await getOwnedChat(
+        requestedConversationId,
+        req.user.id
+      );
+
+      if (!conversation) {
+        return res.status(404).json({
+          error: "Chat not found or you do not have access."
+        });
+      }
     }
 
     let memory = "";
@@ -719,7 +1086,38 @@ app.post("/ask", authenticate, async (req, res) => {
       content: buildSystemPrompt(message, memory, pdfText)
     }];
 
+    /* Load earlier messages only from this user's selected conversation. */
+    if (conversation) {
+      const previous = await supabaseRequest("chat_messages", {
+        query: {
+          select: "role,content,created_at",
+          conversation_id: `eq.${conversation.id}`,
+          user_id: `eq.${req.user.id}`,
+          order: "created_at.desc",
+          limit: String(MAX_CHAT_MESSAGES)
+        }
+      });
+
+      const chronological = (previous || []).reverse();
+
+      for (const item of chronological) {
+        if (
+          ["user", "assistant"].includes(item.role) &&
+          typeof item.content === "string"
+        ) {
+          messages.push({
+            role: item.role,
+            content: item.content.slice(0, 12000)
+          });
+        }
+      }
+    }
+
     let userContent = message || "Please analyze the uploaded file.";
+
+    if (pdfText && !image) {
+      userContent += `\n\nExtracted PDF text:\n${pdfText}`;
+    }
 
     if (image) {
       userContent = [
@@ -733,7 +1131,10 @@ app.post("/ask", authenticate, async (req, res) => {
       ];
     }
 
-    messages.push({ role: "user", content: userContent });
+    messages.push({
+      role: "user",
+      content: userContent
+    });
 
     const usage = await consumeDailyChat(req.user.id);
 
@@ -749,7 +1150,35 @@ app.post("/ask", authenticate, async (req, res) => {
 
     const reply = await askOpenRouter(messages);
 
+    /* Create a conversation only after the AI successfully responds. */
+    if (!conversation) {
+      conversation = await createChat(
+        req.user.id,
+        message || "Uploaded file analysis"
+      );
+    }
+
+    try {
+      await saveChatMessages(
+        req.user.id,
+        conversation.id,
+        message || "Please analyze the uploaded file.",
+        reply
+      );
+    } catch (error) {
+      console.error("Chat History save failed:", error.message);
+
+      return res.status(500).json({
+        error: "SINGAM replied, but the chat could not be saved. Please retry or check Chat History."
+      });
+    }
+
     await saveConversation(req.user.id, message, reply);
+
+    const responseBody = {
+      reply,
+      conversationId: conversation.id
+    };
 
     if (
       /\b(generate|create|make|prepare|export|download|save|produce)\b/i.test(message) &&
@@ -758,40 +1187,49 @@ app.post("/ask", authenticate, async (req, res) => {
       try {
         const pdf = await createPdf(reply);
 
-        return res.json({
-          reply,
-          pdf: {
-            filename: "singam-repair-report.pdf",
-            mimeType: "application/pdf",
-            data: pdf.toString("base64")
-          }
-        });
+        responseBody.pdf = {
+          filename: "singam-repair-report.pdf",
+          mimeType: "application/pdf",
+          data: pdf.toString("base64")
+        };
       } catch (error) {
         console.error("Report PDF error:", error.message);
       }
     }
 
-    res.json({ reply });
+    return res.json(responseBody);
   } catch (error) {
     console.error("Ask route error:", error.message);
 
-    res.status(/rate-limited/i.test(error.message) ? 429 : 500).json({
+    return res.status(/rate-limited/i.test(error.message) ? 429 : 500).json({
       error: error.message || "SINGAM could not complete the request."
     });
   }
 });
 
+/* UNKNOWN API ROUTES */
+
 app.use("/api", (req, res) => {
-  res.status(404).json({ error: "API route not found." });
+  return res.status(404).json({
+    error: "API route not found."
+  });
 });
+
+/* GLOBAL ERROR HANDLER */
 
 app.use((error, req, res, next) => {
   console.error("Server error:", error.message);
+
   if (res.headersSent) return next(error);
-  res.status(500).json({ error: "Unexpected server error." });
+
+  return res.status(500).json({
+    error: "Unexpected server error."
+  });
 });
 
+/* START SERVER */
+
 app.listen(PORT, () => {
-  console.log("🦁 SINGAM TECHNICIAN AI IS ONLINE");
+  console.log("SINGAM TECHNICIAN AI IS ONLINE");
   console.log(`Server running on port ${PORT}`);
 });

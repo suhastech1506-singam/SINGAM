@@ -122,6 +122,7 @@
       .workspace{grid-template-columns:minmax(0,1fr);gap:10px}
       .history-panel{position:static}
       .mobile-history-toggle{display:inline-flex}
+      .hidden-mobile-history{display:none}
       #chatHistoryList{max-height:300px}
       #chatMessages{max-height:380px;min-height:90px;margin:14px 0}
       .chat-user{max-width:96%}
@@ -357,6 +358,7 @@
       refreshUsage();
       loadRepairHistory();
       loadChatHistory();
+      syncMobileHistoryLayout();
     }
     function showPasswordReset(){
       $("authView").classList.remove("hidden");
@@ -377,7 +379,12 @@
         supabaseClient.auth.onAuthStateChange((event,session)=>{
           currentSession=session;
           if(event==="PASSWORD_RECOVERY"){showPasswordReset();return;}
-          if(session)showApp();else{currentConversationId=null;historyLoaded=false;showAuth();}
+          if(session)showApp();
+          else{
+            currentConversationId=null;
+            historyLoaded=false;
+            showAuth();
+          }
         });
         const {data,error}=await supabaseClient.auth.getSession();
         if(error)throw error;
@@ -661,20 +668,25 @@
       button.textContent=shouldShow?"Hide Chat History":"Show Chat History";
     }
 
+    function syncMobileHistoryLayout(){
+      const panel=$("chatHistoryPanel");
+      const button=$("mobileHistoryToggle");
+      if(window.innerWidth>650){
+        panel.classList.remove("hidden","hidden-mobile-history");
+        button.classList.add("hidden");
+      }else{
+        button.classList.remove("hidden");
+        const expanded=button.getAttribute("aria-expanded")==="true";
+        panel.classList.toggle("hidden-mobile-history",!expanded);
+        panel.classList.toggle("hidden",!expanded);
+        button.textContent=expanded?"Hide Chat History":"Show Chat History";
+      }
+    }
+
     $("newChatBtn").addEventListener("click",startNewChat);
     $("refreshHistoryBtn").addEventListener("click",loadChatHistory);
     $("mobileHistoryToggle").addEventListener("click",()=>toggleMobileHistory());
-    window.addEventListener("resize",()=>{
-      if(window.innerWidth>650){
-        $("chatHistoryPanel").classList.remove("hidden");
-        $("mobileHistoryToggle").classList.add("hidden");
-      }else{
-        $("mobileHistoryToggle").classList.remove("hidden");
-        if($("mobileHistoryToggle").getAttribute("aria-expanded")!=="true"){
-          $("chatHistoryPanel").classList.add("hidden");
-        }
-      }
-    });
+    window.addEventListener("resize",syncMobileHistoryLayout);
 
     function fileToBase64(file){
       return new Promise((resolve,reject)=>{
@@ -708,7 +720,7 @@
     });
 
     function downloadBase64Pdf(pdf){
-      if(!pdf?.data) return;
+      if(!pdf?.data)return;
       try{
         const binary=atob(pdf.data);
         const bytes=new Uint8Array(binary.length);
@@ -815,6 +827,11 @@
           const notes=document.createElement("p");
           notes.textContent=repair.complaint||repair.notes||repair.description||"";
           card.appendChild(notes);
+          if(repair.diagnosis){
+            const diagnosis=document.createElement("p");
+            diagnosis.textContent="Diagnosis: "+repair.diagnosis;
+            card.appendChild(diagnosis);
+          }
           if(repair.report_number){
             const report=document.createElement("p");report.textContent="Report: "+repair.report_number;card.appendChild(report);
           }
@@ -855,7 +872,16 @@
       const button=$("repairForm").querySelector('button[type="submit"]');
       button.disabled=true;hideNotice("repairNotice");
       try{
-        await apiFetch("/api/repairs",{method:"POST",body:JSON.stringify({title,device,notes})});
+        /* Match the field names expected by server.js cleanRepair(). */
+        await apiFetch("/api/repairs",{
+          method:"POST",
+          body:JSON.stringify({
+            device_type:device||"Device not specified",
+            brand_model:device||"",
+            complaint:title,
+            diagnosis:notes
+          })
+        });
         $("repairForm").reset();
         showNotice("repairNotice","Repair saved.","success");
         await loadRepairHistory();

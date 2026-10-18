@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -91,6 +90,40 @@
     .repair-card h3{margin:0 0 5px;font-size:15px}
     .repair-card p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
     #repairList{display:grid;gap:10px;min-width:0}
+
+    /* Feedback button and dialog */
+    #feedbackOpenBtn{
+      position:fixed;right:20px;bottom:calc(20px + var(--safe-bottom));
+      z-index:1000;border:1px solid var(--cyan);border-radius:999px;
+      padding:13px 18px;background:var(--cyan);color:#031017;
+      box-shadow:0 8px 28px #0008;font-weight:800
+    }
+    #feedbackOverlay{
+      position:fixed;inset:0;z-index:1001;display:flex;align-items:center;
+      justify-content:center;padding:16px;background:#000b;overflow-y:auto
+    }
+    #feedbackDialog{
+      width:100%;max-width:480px;max-height:calc(100dvh - 32px);
+      overflow-y:auto;padding:22px;border:1px solid var(--border);
+      border-radius:18px;background:linear-gradient(145deg,#101720,#0b121a);
+      box-shadow:0 20px 70px #0009
+    }
+    .feedback-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .feedback-header h2{margin:5px 0}
+    #feedbackCloseBtn{flex-shrink:0;min-width:40px;padding:7px}
+    .feedback-stars{display:flex;gap:7px;margin:5px 0 15px}
+    .feedback-star{
+      flex:1;min-width:0;min-height:46px;border:1px solid var(--border);
+      border-radius:10px;background:#080f16;color:#708596;font-size:26px
+    }
+    .feedback-star.selected{color:#ffd166;border-color:#ffd166;background:#2b2515}
+    .feedback-star:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+    #feedbackMessage{min-height:120px}
+    #feedbackForm{display:grid;gap:14px;margin-top:18px}
+    #feedbackSubmitBtn{width:100%}
+    #feedbackStatus{white-space:pre-wrap}
+    body.feedback-open{overflow:hidden}
+
     @media(max-width:850px){
       .shell{padding:15px}
       .panel{padding:17px}
@@ -136,6 +169,8 @@
       #authSubmit,#saveNewPasswordBtn,#cancelResetBtn{width:100%}
       #repairForm .btn{width:100%}
       .footnote{padding-bottom:var(--safe-bottom)}
+      #feedbackOpenBtn{right:12px;bottom:calc(12px + var(--safe-bottom));padding:12px 15px}
+      #feedbackDialog{padding:17px}
     }
     @media(max-width:360px){
       .shell,#appView{padding:8px}
@@ -145,6 +180,7 @@
       .chat-actions{grid-template-columns:minmax(0,1fr)}
       #sendBtn{grid-column:auto}
       .btn{padding:9px 10px}
+      .feedback-star{font-size:22px}
     }
     @media(prefers-reduced-motion:reduce){
       *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important}
@@ -308,6 +344,57 @@
     </div>
   </div>
 
+  <!-- Feedback dialog is available to signed-in users only -->
+  <button id="feedbackOpenBtn" class="hidden" type="button" aria-haspopup="dialog">
+    ✉ Feedback
+  </button>
+
+  <div id="feedbackOverlay" class="hidden" role="presentation">
+    <section id="feedbackDialog" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+      <div class="feedback-header">
+        <div>
+          <div class="eyebrow">Help us improve</div>
+          <h2 id="feedbackTitle">Share your feedback</h2>
+          <p class="sub">Your feedback helps improve SINGAM Technician AI.</p>
+        </div>
+        <button id="feedbackCloseBtn" class="btn" type="button" aria-label="Close feedback">✕</button>
+      </div>
+
+      <form id="feedbackForm">
+        <div class="field">
+          <label>How would you rate SINGAM?</label>
+          <div class="feedback-stars" role="group" aria-label="Rating from 1 to 5">
+            <button class="feedback-star" type="button" data-rating="1" aria-label="1 star" aria-pressed="false">★</button>
+            <button class="feedback-star" type="button" data-rating="2" aria-label="2 stars" aria-pressed="false">★</button>
+            <button class="feedback-star" type="button" data-rating="3" aria-label="3 stars" aria-pressed="false">★</button>
+            <button class="feedback-star" type="button" data-rating="4" aria-label="4 stars" aria-pressed="false">★</button>
+            <button class="feedback-star" type="button" data-rating="5" aria-label="5 stars" aria-pressed="false">★</button>
+          </div>
+          <p id="feedbackRatingLabel" class="muted">Choose a star rating.</p>
+        </div>
+
+        <div class="field">
+          <label for="feedbackType">Feedback type</label>
+          <select id="feedbackType" required>
+            <option value="general">General feedback</option>
+            <option value="bug">Report a bug</option>
+            <option value="suggestion">Suggestion</option>
+            <option value="feature">Feature request</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="feedbackMessage">Your feedback</label>
+          <textarea id="feedbackMessage" minlength="3" maxlength="2000" required placeholder="Tell us what worked well or what we should improve…"></textarea>
+          <div class="muted"><span id="feedbackCharCount">0</span> / 2000 characters</div>
+        </div>
+
+        <div id="feedbackStatus" class="notice hidden" role="status" aria-live="polite"></div>
+        <button id="feedbackSubmitBtn" class="btn primary" type="submit">Submit feedback</button>
+      </form>
+    </section>
+  </div>
+
   <script>
     "use strict";
 
@@ -323,16 +410,22 @@
     let historyLoaded = false;
     let isLoadingConversation = false;
 
+    // Feedback state
+    let selectedFeedbackRating = 0;
+    let feedbackSubmitting = false;
+
     function showNotice(id,message,type=""){
       const el=$(id);if(!el)return;
       el.textContent=message;
       el.className="notice"+(type?" "+type:"");
       el.classList.remove("hidden");
     }
+
     function hideNotice(id){
       const el=$(id);if(!el)return;
       el.textContent="";el.className="notice hidden";
     }
+
     function setAuthMode(mode){
       authMode=mode;
       $("signInTab").classList.toggle("primary",mode==="signin");
@@ -346,23 +439,31 @@
       $("authTabs").classList.remove("hidden");
       hideNotice("authNotice");
     }
+
     function showAuth(){
       $("authView").classList.remove("hidden");
       $("appView").classList.add("hidden");
+      $("feedbackOpenBtn").classList.add("hidden");
+      closeFeedback();
     }
+
     function showApp(){
       if(!currentSession)return;
       $("authView").classList.add("hidden");
       $("appView").classList.remove("hidden");
+      $("feedbackOpenBtn").classList.remove("hidden");
       $("accountPill").textContent=currentSession.user?.email||"Signed in";
       refreshUsage();
       loadRepairHistory();
       loadChatHistory();
       syncMobileHistoryLayout();
     }
+
     function showPasswordReset(){
       $("authView").classList.remove("hidden");
       $("appView").classList.add("hidden");
+      $("feedbackOpenBtn").classList.add("hidden");
+      closeFeedback();
       $("authTabs").classList.add("hidden");
       $("authForm").classList.add("hidden");
       $("resetPasswordForm").classList.remove("hidden");
@@ -715,6 +816,7 @@
       selectedFile=file;$("filePreviewName").textContent=file.name;
       $("filePreview").classList.remove("hidden");hideNotice("chatNotice");
     });
+
     $("removeFileBtn").addEventListener("click",()=>{
       selectedFile=null;$("imageInput").value="";$("filePreview").classList.add("hidden");
     });
@@ -737,12 +839,8 @@
       }
     }
 
-    // FIXED: Clear the input immediately after submitting.
-    // If the request fails, restore the old text only when the box is still empty.
-    // This avoids overwriting any new message typed while the request is running.
     $("chatForm").addEventListener("submit",async event=>{
       event.preventDefault();
-
       const message=$("chatInput").value.trim();
 
       if(!message&&!selectedFile){
@@ -758,18 +856,15 @@
       if(message)addChatMessage(message,"user");
       if(selectedFile)addChatMessage("Attached file: "+selectedFile.name,"user");
 
-      // Clear the textbox immediately when sending starts.
       $("chatInput").value="";
 
       try{
         const payload={message};
-
         if(currentConversationId)payload.conversationId=currentConversationId;
 
         if(selectedFile){
           const data=await fileToBase64(selectedFile);
           const isPdf=selectedFile.type==="application/pdf"||selectedFile.name.toLowerCase().endsWith(".pdf");
-
           if(isPdf){
             payload.pdf={data,mimeType:"application/pdf",name:selectedFile.name};
           }else{
@@ -783,9 +878,7 @@
         });
 
         const reply=result.reply||result.message||"No response received.";
-
         if(result.conversationId)currentConversationId=result.conversationId;
-
         addChatMessage(reply,"ai");
 
         if(result.pdf){
@@ -795,26 +888,18 @@
 
         if(voiceEnabled)speakReply(reply);
 
-        // Do not clear chatInput here: the user may already have typed
-        // their next question while SINGAM was processing the previous one.
         selectedFile=null;
         $("imageInput").value="";
         $("filePreview").classList.add("hidden");
-
         await Promise.all([refreshUsage(),loadChatHistory()]);
 
       }catch(error){
-        // Restore the previous message only if the textbox is still empty.
-        // Never overwrite a newer message typed by the user.
         if(message&&!$("chatInput").value.trim()){
           $("chatInput").value=message;
         }
-
         showNotice("chatNotice",error.message||"Chat request failed.","error");
         addChatMessage("Request failed: "+error.message,"ai");
-
         await refreshUsage();
-
       }finally{
         button.disabled=false;
         button.textContent="Send message";
@@ -864,7 +949,6 @@
 
       recognition.onerror=event=>showNotice("chatNotice","Voice input error: "+event.error,"error");
       recognition.onend=()=>{recognition=null;$("voiceInputBtn").textContent="🎙 Dictate";};
-
       $("voiceInputBtn").textContent="Listening…";
 
       try{
@@ -944,7 +1028,6 @@
 
     async function downloadRepairPdf(id,button){
       button.disabled=true;
-
       try{
         const blob=await apiFetch("/api/repairs/"+encodeURIComponent(id)+"/pdf");
         const url=URL.createObjectURL(blob);
@@ -964,7 +1047,6 @@
 
     $("repairForm").addEventListener("submit",async event=>{
       event.preventDefault();
-
       const title=$("repairTitle").value.trim();
       const device=$("repairDevice").value.trim();
       const notes=$("repairNotes").value.trim();
@@ -979,7 +1061,6 @@
       hideNotice("repairNotice");
 
       try{
-        /* Match the field names expected by server.js cleanRepair(). */
         await apiFetch("/api/repairs",{
           method:"POST",
           body:JSON.stringify({
@@ -993,10 +1074,151 @@
         $("repairForm").reset();
         showNotice("repairNotice","Repair saved.","success");
         await loadRepairHistory();
-
       }catch(error){
         showNotice("repairNotice",error.message||"Could not save repair.","error");
       }finally{
+        button.disabled=false;
+      }
+    });
+
+    // Feedback dialog logic
+    function openFeedback(){
+      if(!currentSession){
+        showNotice("authNotice","Please sign in to submit feedback.","error");
+        return;
+      }
+      $("feedbackOverlay").classList.remove("hidden");
+      document.body.classList.add("feedback-open");
+      hideNotice("feedbackStatus");
+      $("feedbackMessage").focus();
+    }
+
+    function closeFeedback(){
+      $("feedbackOverlay").classList.add("hidden");
+      document.body.classList.remove("feedback-open");
+    }
+
+    function setFeedbackRating(rating){
+      selectedFeedbackRating=rating;
+      document.querySelectorAll(".feedback-star").forEach(button=>{
+        const value=Number(button.dataset.rating);
+        const selected=value<=rating;
+        button.classList.toggle("selected",selected);
+        button.setAttribute("aria-pressed",String(value===rating));
+      });
+      $("feedbackRatingLabel").textContent=rating===1?"1 star — Needs improvement":
+        rating===2?"2 stars — Could be better":
+        rating===3?"3 stars — Okay":
+        rating===4?"4 stars — Good":
+        "5 stars — Excellent";
+    }
+
+    $("feedbackOpenBtn").addEventListener("click",openFeedback);
+    $("feedbackCloseBtn").addEventListener("click",closeFeedback);
+
+    $("feedbackOverlay").addEventListener("click",event=>{
+      if(event.target===$("feedbackOverlay")&&!feedbackSubmitting)closeFeedback();
+    });
+
+    document.addEventListener("keydown",event=>{
+      if(event.key==="Escape"&&!$("feedbackOverlay").classList.contains("hidden")&&!feedbackSubmitting){
+        closeFeedback();
+      }
+    });
+
+    document.querySelectorAll(".feedback-star").forEach(button=>{
+      button.addEventListener("click",()=>setFeedbackRating(Number(button.dataset.rating)));
+    });
+
+    $("feedbackMessage").addEventListener("input",()=>{
+      $("feedbackCharCount").textContent=String($("feedbackMessage").value.length);
+    });
+
+    $("feedbackForm").addEventListener("submit",async event=>{
+      event.preventDefault();
+
+      if(feedbackSubmitting)return;
+
+      if(!supabaseClient){
+        showNotice("feedbackStatus","SINGAM is still connecting. Please try again.","error");
+        return;
+      }
+
+      if(!selectedFeedbackRating){
+        showNotice("feedbackStatus","Please choose a star rating.","error");
+        return;
+      }
+
+      const message=$("feedbackMessage").value.trim();
+      const feedbackType=$("feedbackType").value;
+
+      if(message.length<3){
+        showNotice("feedbackStatus","Please enter at least 3 characters.","error");
+        $("feedbackMessage").focus();
+        return;
+      }
+
+      if(message.length>2000){
+        showNotice("feedbackStatus","Feedback must be 2000 characters or fewer.","error");
+        return;
+      }
+
+      const button=$("feedbackSubmitBtn");
+      feedbackSubmitting=true;
+      button.disabled=true;
+      button.textContent="Submitting…";
+      hideNotice("feedbackStatus");
+
+      try{
+        const {data,error:sessionError}=await supabaseClient.auth.getSession();
+        if(sessionError)throw sessionError;
+
+        const session=data.session;
+        if(!session){
+          currentSession=null;
+          showAuth();
+          throw new Error("Your session expired. Please sign in again.");
+        }
+
+        currentSession=session;
+
+        const {error}=await supabaseClient
+          .from("user_feedback")
+          .insert({
+            user_id:session.user.id,
+            rating:selectedFeedbackRating,
+            feedback_type:feedbackType,
+            message:message
+          });
+
+        if(error)throw error;
+
+        showNotice("feedbackStatus","Thank you! Your feedback was submitted successfully.","success");
+        $("feedbackForm").reset();
+        selectedFeedbackRating=0;
+        $("feedbackCharCount").textContent="0";
+        $("feedbackRatingLabel").textContent="Choose a star rating.";
+        document.querySelectorAll(".feedback-star").forEach(star=>{
+          star.classList.remove("selected");
+          star.setAttribute("aria-pressed","false");
+        });
+
+        button.textContent="Submitted!";
+        window.setTimeout(()=>{
+          if(!$("feedbackOverlay").classList.contains("hidden"))closeFeedback();
+          button.textContent="Submit feedback";
+        },1600);
+
+      }catch(error){
+        console.error("Feedback submission failed:",error);
+        showNotice(
+          "feedbackStatus",
+          error.message||"Could not submit feedback. Please try again.",
+          "error"
+        );
+        button.textContent="Try again";
+      }finally{
+        feedbackSubmitting=false;
         button.disabled=false;
       }
     });

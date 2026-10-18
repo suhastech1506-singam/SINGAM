@@ -232,21 +232,22 @@ async function authenticate(req, res, next) {
 /* FREE / PRO / SHOP PLANS */
 
 /*
-  The user_subscriptions table is read with the server's Supabase secret key.
+  Paid access is granted only if ALL conditions are satisfied:
+  1. Stored plan is "pro" or "shop".
+  2. Subscription status is "active".
+  3. payment_verified is exactly true in the database.
+  4. current_period_end is a valid future date.
+
+  The payment gateway and its trusted server-side webhook are not
+  implemented here. Therefore, this code does not verify payments itself.
+
   Never expose SUPABASE_SECRET_KEY to the browser.
-
-  Paid access is only granted when:
-  - The stored plan is pro or shop.
-  - The subscription status is active.
-  - current_period_end is in the future.
-
-  Payment verification/webhooks are not implemented by this file yet.
 */
 
 async function getUserPlan(userId) {
   const rows = await supabaseRequest("user_subscriptions", {
     query: {
-      select: "user_id,plan,status,current_period_end,updated_at",
+      select: "user_id,plan,status,current_period_end,updated_at,payment_verified",
       user_id: `eq.${userId}`,
       limit: "1"
     }
@@ -254,15 +255,15 @@ async function getUserPlan(userId) {
 
   let subscription = rows?.[0];
 
-  // New users default to Free. Do not silently grant paid access if
-  // the subscription row cannot be read or created.
+  // New accounts are initialized on Free with payment_verified disabled.
   if (!subscription) {
     const created = await supabaseRequest("user_subscriptions", {
       method: "POST",
       body: {
         user_id: userId,
         plan: "free",
-        status: "active"
+        status: "active",
+        payment_verified: false
       }
     });
 
@@ -275,17 +276,21 @@ async function getUserPlan(userId) {
 
   const requestedPlan = clean(subscription.plan).toLowerCase();
   const status = clean(subscription.status).toLowerCase();
+
   const periodEnd = subscription.current_period_end
     ? new Date(subscription.current_period_end).getTime()
     : 0;
 
-  const periodIsValid = Number.isFinite(periodEnd) && periodEnd > Date.now();
+  const periodIsValid =
+    Number.isFinite(periodEnd) && periodEnd > Date.now();
 
   let effectivePlan = "free";
 
+  // Critical security check: all four conditions must pass.
   if (
     ["pro", "shop"].includes(requestedPlan) &&
     status === "active" &&
+    subscription.payment_verified === true &&
     periodIsValid
   ) {
     effectivePlan = requestedPlan;
@@ -922,7 +927,7 @@ app.post("/ask", authenticate, async (req, res, next) => {
       throw makeHttpError("Enter a question or attach a file.", 400);
     }
 
-    // Read the effective plan from the server-controlled subscription table.
+    // The effective plan and its limit are determined by the server.
     const planInfo = await getUserPlan(req.user.id);
 
     if (req.body?.conversationId) {
@@ -983,7 +988,7 @@ app.post("/ask", authenticate, async (req, res, next) => {
         ]
       : (userMessage || "Please analyse the attached document.") + attachmentText;
 
-    // Server-side enforcement: the browser cannot choose its own plan limit.
+    // Server-side daily usage enforcement.
     const usage = await consumeDailyChat(req.user.id, planInfo.daily_limit);
 
     if (usageLimitReached(usage)) {

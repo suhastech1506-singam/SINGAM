@@ -37,7 +37,28 @@ app.use(express.urlencoded({
   limit: MAX_REQUEST_BYTES,
   parameterLimit: 100
 }));
-app.use(express.static(path.join(__dirname, "public")));
+
+// STATIC FILE CACHING OPTIMIZATION
+// HTML revalidates so new deployments are picked up promptly.
+// Other public assets can be cached for one day.
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    etag: true,
+    lastModified: true,
+    setHeaders(res, filePath) {
+      const extension = path.extname(filePath).toLowerCase();
+
+      if (extension === ".html") {
+        res.setHeader("Cache-Control", "no-cache");
+      } else {
+        res.setHeader(
+          "Cache-Control",
+          "public, max-age=86400, stale-while-revalidate=604800"
+        );
+      }
+    }
+  })
+);
 
 /* GENERAL HELPERS */
 

@@ -91,6 +91,24 @@
     .repair-card p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
     #repairList{display:grid;gap:10px;min-width:0}
 
+    /* Subscription plans */
+    .subscription-section{margin-bottom:15px}
+    .subscription-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+    .subscription-header h2{margin:6px 0}
+    .subscription-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .plan-card{display:flex;flex-direction:column;min-width:0;padding:16px;border:1px solid var(--border);border-radius:14px;background:#0a131b}
+    .plan-card.featured{border-color:#55eaff88;box-shadow:inset 0 0 20px #55eaff08}
+    .plan-card h3{margin:0;font-size:18px}
+    .plan-price{margin:10px 0;font-size:27px;font-weight:850;overflow-wrap:anywhere}
+    .plan-price small{font-size:12px;font-weight:500;color:var(--muted)}
+    .plan-limit{color:var(--cyan);font-weight:750;font-size:13px}
+    .plan-features{flex:1;padding-left:19px;color:var(--muted);font-size:13px}
+    .plan-features li{margin:7px 0;overflow-wrap:anywhere}
+    .plan-status{min-height:20px;margin:8px 0;color:var(--muted);font-size:12px}
+    .plan-card .btn{width:100%;margin-top:5px}
+    .subscription-message{margin-top:12px;white-space:pre-wrap}
+    .subscription-disclaimer{margin-top:12px;color:var(--muted);font-size:12px}
+
     /* Feedback button and dialog */
     #feedbackOpenBtn{
       position:fixed;right:20px;bottom:calc(20px + var(--safe-bottom));
@@ -132,6 +150,7 @@
       #accountPill{max-width:65%}
       .workspace{grid-template-columns:minmax(205px,235px) minmax(0,1fr);gap:10px}
       #chatMessages{max-height:450px}
+      .subscription-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     }
     @media(max-width:650px){
       .shell,#appView{padding:10px}
@@ -171,6 +190,8 @@
       .footnote{padding-bottom:var(--safe-bottom)}
       #feedbackOpenBtn{right:12px;bottom:calc(12px + var(--safe-bottom));padding:12px 15px}
       #feedbackDialog{padding:17px}
+      .subscription-grid{grid-template-columns:minmax(0,1fr)}
+      .plan-price{font-size:25px}
     }
     @media(max-width:360px){
       .shell,#appView{padding:8px}
@@ -265,9 +286,75 @@
             <div id="usageFill" style="width:0;height:100%;background:var(--cyan)"></div>
           </div>
         </div>
-        <div class="notice"><div class="muted">Workspace</div><strong>Private technician assistant</strong></div>
+        <div class="notice">
+          <div class="muted">Workspace</div>
+          <strong>Private technician assistant</strong>
+        </div>
       </div>
     </header>
+
+    <!-- Subscription plans: paid plans remain inactive until server-verified payment -->
+    <section class="panel subscription-section" aria-labelledby="subscriptionHeading">
+      <div class="subscription-header">
+        <div>
+          <div class="eyebrow">Plans & access</div>
+          <h2 id="subscriptionHeading">Choose your SINGAM plan</h2>
+          <p class="sub">Compare the proposed plans for individual technicians and repair shops.</p>
+        </div>
+        <div id="currentPlanBadge" class="notice" aria-live="polite">Loading plan…</div>
+      </div>
+
+      <div class="subscription-grid">
+        <article class="plan-card" id="freePlanCard">
+          <h3>Free</h3>
+          <div class="plan-price">₹0 <small>/ month</small></div>
+          <div class="plan-limit">100 chats per day</div>
+          <ul class="plan-features">
+            <li>Technician AI chat</li>
+            <li>Supported image and PDF uploads</li>
+            <li>Chat and repair history</li>
+            <li>Voice tools and feedback</li>
+          </ul>
+          <div id="freePlanStatus" class="plan-status">Checking plan…</div>
+          <button class="btn" type="button" data-select-plan="free">Free plan</button>
+        </article>
+
+        <article class="plan-card featured" id="proPlanCard">
+          <h3>Pro</h3>
+          <div class="plan-price">₹299 <small>/ month*</small></div>
+          <div class="plan-limit">300 chats per day*</div>
+          <ul class="plan-features">
+            <li>Everything listed in Free</li>
+            <li>Higher proposed daily chat limit</li>
+            <li>Designed for individual technicians</li>
+            <li>Paid access requires verified checkout</li>
+          </ul>
+          <div id="proPlanStatus" class="plan-status">Checking plan…</div>
+          <button class="btn primary" type="button" data-select-plan="pro">View Pro upgrade</button>
+        </article>
+
+        <article class="plan-card" id="shopPlanCard">
+          <h3>Shop</h3>
+          <div class="plan-price">₹999 <small>/ month*</small></div>
+          <div class="plan-limit">1,000 chats per day*</div>
+          <ul class="plan-features">
+            <li>Everything listed in Free</li>
+            <li>Higher proposed daily chat limit</li>
+            <li>Designed for repair-shop workflows</li>
+            <li>Paid access requires verified checkout</li>
+          </ul>
+          <div id="shopPlanStatus" class="plan-status">Checking plan…</div>
+          <button class="btn" type="button" data-select-plan="shop">View Shop upgrade</button>
+        </article>
+      </div>
+
+      <div id="subscriptionMessage" class="notice subscription-message hidden" role="status" aria-live="polite"></div>
+      <p class="subscription-disclaimer">
+        *Proposed prices and limits only; not final. Paid checkout is not configured.
+        Selecting a plan does not charge you or change your account. Paid access can only
+        be activated after the server verifies payment with the payment provider.
+      </p>
+    </section>
 
     <button id="mobileHistoryToggle" class="btn mobile-history-toggle" type="button" aria-expanded="false" aria-controls="chatHistoryPanel">Show Chat History</button>
 
@@ -345,9 +432,7 @@
   </div>
 
   <!-- Feedback dialog is available to signed-in users only -->
-  <button id="feedbackOpenBtn" class="hidden" type="button" aria-haspopup="dialog">
-    ✉ Feedback
-  </button>
+  <button id="feedbackOpenBtn" class="hidden" type="button" aria-haspopup="dialog">✉ Feedback</button>
 
   <div id="feedbackOverlay" class="hidden" role="presentation">
     <section id="feedbackDialog" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
@@ -409,10 +494,20 @@
     let currentConversationId = null;
     let historyLoaded = false;
     let isLoadingConversation = false;
-
-    // Feedback state
     let selectedFeedbackRating = 0;
     let feedbackSubmitting = false;
+
+    // UI display only. The server remains authoritative for prices, plan status and limits.
+    const SINGAM_PLANS = {
+      free: {name:"Free",price:0,dailyLimit:100},
+      pro: {name:"Pro",price:299,dailyLimit:300},
+      shop: {name:"Shop",price:999,dailyLimit:1000}
+    };
+    let currentPlanName = "free";
+
+    function hasOwn(object,key){
+      return Object.prototype.hasOwnProperty.call(object,key);
+    }
 
     function showNotice(id,message,type=""){
       const el=$(id);if(!el)return;
@@ -454,6 +549,7 @@
       $("feedbackOpenBtn").classList.remove("hidden");
       $("accountPill").textContent=currentSession.user?.email||"Signed in";
       refreshUsage();
+      loadSubscriptionPlans();
       loadRepairHistory();
       loadChatHistory();
       syncMobileHistoryLayout();
@@ -484,6 +580,7 @@
           else{
             currentConversationId=null;
             historyLoaded=false;
+            currentPlanName="free";
             showAuth();
           }
         });
@@ -577,7 +674,7 @@
       const button=$("signOutBtn");button.disabled=true;
       try{
         const {error}=await supabaseClient.auth.signOut();if(error)throw error;
-        currentSession=null;currentConversationId=null;historyLoaded=false;showAuth();
+        currentSession=null;currentConversationId=null;historyLoaded=false;currentPlanName="free";showAuth();
       }catch(error){showNotice("chatNotice",error.message||"Could not sign out.","error");}
       finally{button.disabled=false;}
     });
@@ -615,6 +712,85 @@
         $("usageBar").setAttribute("aria-valuenow",String(Math.round(percentage)));
       }catch(error){$("usageText").textContent="Usage unavailable";console.warn("Usage refresh failed:",error.message);}
     }
+
+    // Subscription UI reads the plan from the authenticated server endpoint.
+    // It never activates a plan or changes subscription records from the browser.
+    function displayPlanName(plan){
+      return SINGAM_PLANS[plan]?.name||"Free";
+    }
+
+    function showSubscriptionMessage(message,type=""){
+      const element=$("subscriptionMessage");
+      element.textContent=message;
+      element.className="notice subscription-message"+(type?" "+type:"");
+      element.classList.remove("hidden");
+    }
+
+    async function loadSubscriptionPlans(){
+      const badge=$("currentPlanBadge");
+      try{
+        // /usage is the existing authenticated endpoint and reports the server's current plan.
+        const result=await apiFetch("/usage");
+        const serverPlan=String(result.plan||"free").toLowerCase();
+        currentPlanName=hasOwn(SINGAM_PLANS,serverPlan)?serverPlan:"free";
+        badge.textContent="Current plan: "+displayPlanName(currentPlanName);
+
+        for(const plan of Object.keys(SINGAM_PLANS)){
+          const status=$(plan+"PlanStatus");
+          const button=document.querySelector('[data-select-plan="'+plan+'"]');
+          if(!status||!button)continue;
+
+          button.disabled=false;
+
+          if(plan===currentPlanName){
+            status.textContent="Your current plan";
+            button.textContent="Current plan";
+            button.disabled=true;
+          }else if(plan==="free"){
+            status.textContent="Free access";
+            button.textContent="Free plan";
+          }else{
+            status.textContent="Payment setup required";
+            button.textContent=plan==="pro"?"View Pro upgrade":"View Shop upgrade";
+          }
+        }
+      }catch(error){
+        badge.textContent="Plan status unavailable";
+        console.warn("Could not load subscription status:",error.message);
+        for(const plan of Object.keys(SINGAM_PLANS)){
+          const status=$(plan+"PlanStatus");
+          const button=document.querySelector('[data-select-plan="'+plan+'"]');
+          if(status)status.textContent="Could not verify plan";
+          if(button)button.disabled=true;
+        }
+      }
+    }
+
+    document.querySelectorAll("[data-select-plan]").forEach(button=>{
+      button.addEventListener("click",()=>{
+        const requestedPlan=button.dataset.selectPlan;
+        if(!hasOwn(SINGAM_PLANS,requestedPlan))return;
+
+        if(requestedPlan===currentPlanName){
+          showSubscriptionMessage("This is your current plan. Your existing workspace remains unchanged.");
+          return;
+        }
+
+        if(requestedPlan==="free"){
+          showSubscriptionMessage("Your current plan has not been changed. Any plan change must be processed and verified by the server.");
+          return;
+        }
+
+        const plan=SINGAM_PLANS[requestedPlan];
+        showSubscriptionMessage(
+          plan.name+" — ₹"+plan.price+"/month (proposed)\n\n"+
+          "Secure checkout is not configured yet. No payment has been taken, "+
+          "and your plan has NOT been changed.\n\n"+
+          "Paid access can only be enabled after the server verifies a successful "+
+          "payment with the payment provider."
+        );
+      });
+    });
 
     function addChatMessage(message,sender){
       const item=document.createElement("div");
@@ -1211,11 +1387,7 @@
 
       }catch(error){
         console.error("Feedback submission failed:",error);
-        showNotice(
-          "feedbackStatus",
-          error.message||"Could not submit feedback. Please try again.",
-          "error"
-        );
+        showNotice("feedbackStatus",error.message||"Could not submit feedback. Please try again.","error");
         button.textContent="Try again";
       }finally{
         feedbackSubmitting=false;

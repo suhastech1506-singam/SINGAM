@@ -19,6 +19,18 @@ const DAILY_CHAT_LIMIT = Math.max(
   Number.parseInt(process.env.DAILY_CHAT_LIMIT || "100", 10) || 100
 );
 
+const PLAN_LIMITS = Object.freeze({
+  free: DAILY_CHAT_LIMIT,
+  pro: 300,
+  shop: 1000
+});
+
+const PLAN_PRICES = Object.freeze({
+  free: 0,
+  pro: 299,
+  shop: 999
+});
+
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "openrouter/free";
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -168,6 +180,8 @@ async function supabaseRequest(table, options = {}) {
   return data;
 }
 
+/* AUTHENTICATION */
+
 async function authenticate(req, res, next) {
   try {
     if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
@@ -195,7 +209,7 @@ async function authenticate(req, res, next) {
         });
       }
 
-      return res.status(response.status >= 500 ? 503 : response.status, {
+      return res.status(response.status >= 500 ? 503 : response.status).json({
         error: "Unable to verify your session right now."
       });
     }
@@ -215,9 +229,82 @@ async function authenticate(req, res, next) {
   }
 }
 
+/* FREE / PRO / SHOP PLANS */
+
+/*
+  The user_subscriptions table is read with the server's Supabase secret key.
+  Never expose SUPABASE_SECRET_KEY to the browser.
+
+  Paid access is only granted when:
+  - The stored plan is pro or shop.
+  - The subscription status is active.
+  - current_period_end is in the future.
+
+  Payment verification/webhooks are not implemented by this file yet.
+*/
+
+async function getUserPlan(userId) {
+  const rows = await supabaseRequest("user_subscriptions", {
+    query: {
+      select: "user_id,plan,status,current_period_end,updated_at",
+      user_id: `eq.${userId}`,
+      limit: "1"
+    }
+  });
+
+  let subscription = rows?.[0];
+
+  // New users default to Free. Do not silently grant paid access if
+  // the subscription row cannot be read or created.
+  if (!subscription) {
+    const created = await supabaseRequest("user_subscriptions", {
+      method: "POST",
+      body: {
+        user_id: userId,
+        plan: "free",
+        status: "active"
+      }
+    });
+
+    subscription = created?.[0];
+
+    if (!subscription) {
+      throw makeHttpError("Could not initialize your subscription.", 503);
+    }
+  }
+
+  const requestedPlan = clean(subscription.plan).toLowerCase();
+  const status = clean(subscription.status).toLowerCase();
+  const periodEnd = subscription.current_period_end
+    ? new Date(subscription.current_period_end).getTime()
+    : 0;
+
+  const periodIsValid = Number.isFinite(periodEnd) && periodEnd > Date.now();
+
+  let effectivePlan = "free";
+
+  if (
+    ["pro", "shop"].includes(requestedPlan) &&
+    status === "active" &&
+    periodIsValid
+  ) {
+    effectivePlan = requestedPlan;
+  }
+
+  return {
+    plan: effectivePlan,
+    status: effectivePlan === "free" ? "free" : status,
+    daily_limit: PLAN_LIMITS[effectivePlan],
+    monthly_price_inr: PLAN_PRICES[effectivePlan],
+    current_period_end: effectivePlan === "free"
+      ? null
+      : subscription.current_period_end
+  };
+}
+
 /* DAILY USAGE */
 
-async function consumeDailyChat(userId) {
+async function consumeDailyChat(userId, dailyLimit) {
   const response = await fetchWithRetry(
     `${SUPABASE_URL}/rest/v1/rpc/consume_daily_chat`,
     {
@@ -229,7 +316,7 @@ async function consumeDailyChat(userId) {
       },
       body: JSON.stringify({
         p_user_id: userId,
-        p_daily_limit: DAILY_CHAT_LIMIT
+        p_daily_limit: dailyLimit
       })
     },
     { maxAttempts: 1 }
@@ -241,14 +328,14 @@ async function consumeDailyChat(userId) {
     console.error("Usage RPC error:", result);
     throw makeHttpError(
       "Could not update daily chat usage. Check the consume_daily_chat RPC.",
-      response.status
+      response.status >= 500 ? 503 : response.status
     );
   }
 
   return result;
 }
 
-async function getUsage(userId, token) {
+async function getUsage(userId, token, planInfo) {
   const query = new URLSearchParams({
     select: "usage_date,chat_count",
     user_id: `eq.${userId}`,
@@ -272,12 +359,14 @@ async function getUsage(userId, token) {
 
   const rows = await response.json();
   const count = Number(rows?.[0]?.chat_count || 0);
+  const dailyLimit = planInfo.daily_limit;
 
   return {
     usage_date: todayIndia(),
     chat_count: count,
-    daily_limit: DAILY_CHAT_LIMIT,
-    remaining: Math.max(0, DAILY_CHAT_LIMIT - count)
+    daily_limit: dailyLimit,
+    remaining: Math.max(0, dailyLimit - count),
+    plan: planInfo.plan
   };
 }
 
@@ -628,9 +717,11 @@ async function askOpenRouter(messages) {
 
   if (!response.ok) {
     console.error("OpenRouter error:", response.status, result);
+
     if (response.status === 429) {
       throw makeHttpError("The AI service is busy or rate-limited. Please try again shortly.", 429);
     }
+
     throw makeHttpError(
       result?.error?.message || "The AI service could not complete this request.",
       response.status >= 500 ? 503 : response.status
@@ -659,7 +750,11 @@ function makePdfBuffer(title, content) {
       doc.moveDown(0.3);
       doc.fontSize(15).fillColor("#111111").text(title || "Technician Report");
       doc.moveDown(0.5);
-      doc.fontSize(9).fillColor("#666666").text(`Generated: ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}`);
+      doc.fontSize(9).fillColor("#666666").text(
+        `Generated: ${new Date().toLocaleString("en-IN", {
+          timeZone: "Asia/Kolkata"
+        })}`
+      );
       doc.moveDown();
       doc.fontSize(11).fillColor("#111111").text(String(content || ""), {
         width: doc.page.width - 96,
@@ -687,10 +782,38 @@ app.get("/config", (req, res) => {
   });
 });
 
+/* CURRENT PLAN API */
+
+app.get("/plan", authenticate, async (req, res, next) => {
+  try {
+    const planInfo = await getUserPlan(req.user.id);
+
+    res.set("Cache-Control", "no-store");
+    res.json({
+      plan: planInfo.plan,
+      status: planInfo.status,
+      daily_limit: planInfo.daily_limit,
+      monthly_price_inr: planInfo.monthly_price_inr,
+      current_period_end: planInfo.current_period_end,
+      available_plans: [
+        { id: "free", monthly_price_inr: 0, daily_limit: PLAN_LIMITS.free },
+        { id: "pro", monthly_price_inr: PLAN_PRICES.pro, daily_limit: PLAN_LIMITS.pro },
+        { id: "shop", monthly_price_inr: PLAN_PRICES.shop, daily_limit: PLAN_LIMITS.shop }
+      ]
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/* DAILY USAGE API */
+
 app.get("/usage", authenticate, async (req, res, next) => {
   try {
+    const planInfo = await getUserPlan(req.user.id);
+
     res.set("Cache-Control", "no-store");
-    res.json(await getUsage(req.user.id, req.accessToken));
+    res.json(await getUsage(req.user.id, req.accessToken, planInfo));
   } catch (error) {
     next(error);
   }
@@ -799,6 +922,9 @@ app.post("/ask", authenticate, async (req, res, next) => {
       throw makeHttpError("Enter a question or attach a file.", 400);
     }
 
+    // Read the effective plan from the server-controlled subscription table.
+    const planInfo = await getUserPlan(req.user.id);
+
     if (req.body?.conversationId) {
       if (!isUuid(req.body.conversationId)) {
         throw makeHttpError("Invalid conversation ID.", 400);
@@ -808,9 +934,7 @@ app.post("/ask", authenticate, async (req, res, next) => {
       if (!owned) throw makeHttpError("Conversation not found.", 404);
       conversationId = owned.id;
     } else {
-      const title = userMessage
-        ? userMessage.slice(0, 70)
-        : "File analysis";
+      const title = userMessage ? userMessage.slice(0, 70) : "File analysis";
       const chat = await createChat(req.user.id, title);
       conversationId = chat.id;
     }
@@ -827,6 +951,7 @@ app.post("/ask", authenticate, async (req, res, next) => {
     if (imageInput?.data) {
       const { buffer, mimeType } = decodeBase64File(imageInput.data);
       const imageMime = getImageMimeType(buffer, imageInput.mimeType || mimeType);
+
       imagePart = {
         type: "image_url",
         image_url: {
@@ -850,14 +975,22 @@ app.post("/ask", authenticate, async (req, res, next) => {
 
     const userContent = imagePart
       ? [
-          { type: "text", text: (userMessage || "Please inspect this image and help diagnose the issue.") + attachmentText },
+          {
+            type: "text",
+            text: (userMessage || "Please inspect this image and help diagnose the issue.") + attachmentText
+          },
           imagePart
         ]
       : (userMessage || "Please analyse the attached document.") + attachmentText;
 
-    const usage = await consumeDailyChat(req.user.id);
+    // Server-side enforcement: the browser cannot choose its own plan limit.
+    const usage = await consumeDailyChat(req.user.id, planInfo.daily_limit);
+
     if (usageLimitReached(usage)) {
-      throw makeHttpError(`Daily chat limit reached (${DAILY_CHAT_LIMIT}). Try again tomorrow.`, 429);
+      throw makeHttpError(
+        `Daily chat limit reached (${planInfo.daily_limit}). Your current plan is ${planInfo.plan}.`,
+        429
+      );
     }
 
     await insertChatMessage(
@@ -876,6 +1009,7 @@ app.post("/ask", authenticate, async (req, res, next) => {
     await saveConversation(req.user.id, userMessage, reply);
 
     let pdf = null;
+
     if (/\b(make|create|generate|export|download)\b.{0,35}\bpdf\b|\bpdf report\b/i.test(userMessage)) {
       const buffer = await makePdfBuffer("SINGAM AI Answer", reply);
       pdf = {
@@ -885,7 +1019,13 @@ app.post("/ask", authenticate, async (req, res, next) => {
       };
     }
 
-    res.json({ reply, conversationId, pdf });
+    res.json({
+      reply,
+      conversationId,
+      pdf,
+      plan: planInfo.plan,
+      daily_limit: planInfo.daily_limit
+    });
   } catch (error) {
     next(error);
   }
@@ -1015,6 +1155,7 @@ app.use((error, req, res, next) => {
   if (res.headersSent) return next(error);
 
   const status = Number(error.statusCode) || 500;
+
   if (status >= 500) {
     console.error("Request error:", error.message);
   }
